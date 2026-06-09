@@ -1,7 +1,8 @@
 import json
 import os
 from dotenv import load_dotenv
-from invgate_connection import InvgateConnection
+from classes.invgate_connection import InvgateConnection
+from classes.invgate_routes import InvgateRoutes as routes
 
 # Load Credentials
 load_dotenv()
@@ -19,7 +20,7 @@ invgate = InvgateConnection(DOMAIN, CLIENT_ID, CLIENT_SECRET)
 if invgate.access_token:
     print("Fetching data...")
 
-    response_data = invgate.get_data("/public-api/computers/444")
+    response_data = invgate.get_user(888)
 
     if response_data:
         print(json.dumps(response_data, indent=4))
