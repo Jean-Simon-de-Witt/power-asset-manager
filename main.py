@@ -20,4 +20,7 @@ invgate = InvgateConnection(DOMAIN, CLIENT_ID, CLIENT_SECRET)
 if invgate.access_token:
     print("Fetching data...")
     invgate.populate()
-    print(invgate.get_computer(700))
+    invgate.users[55].print()
+    invgate.computers[55].print()
+    invgate.users[155].print()
+    invgate.computers[155].print()

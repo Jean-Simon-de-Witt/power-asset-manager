@@ -1,5 +1,6 @@
 class InvgateUser:
-    def __init__(self, name, email, email_display, date_of_birth, employee_id, position, department, company, phone, cellphone, address, person_type, is_deleted):
+    def __init__(self, id, name, email, email_display, date_of_birth, employee_id, position, department, company, phone, cellphone, address, person_type, is_deleted):
+        self.id = id
         self.name = name
         self.email = email
         self.email_display = email_display
@@ -15,4 +16,4 @@ class InvgateUser:
         self.is_deleted = is_deleted
 
     def print(self):
-        print(f"Name: {self.name}\nEmail: {self.email}\nEmail Display: {self.email_display}\nDate of Birth: {self.data_of_birth}\nEmployee ID: {self.employee_id}\nPosition: {self.position}\nDepartment: {self.department}\nCompany: {self.company}\nPhone: {self.phone}\nCellphone: {self.cellphone}\nAddress: {self.address}\nPerson Type: {self.person_type}\n")
+        print(f"ID: {self.id}\nName: {self.name}\nEmail: {self.email}\nEmail Display: {self.email_display}\nDate of Birth: {self.data_of_birth}\nEmployee ID: {self.employee_id}\nPosition: {self.position}\nDepartment: {self.department}\nCompany: {self.company}\nPhone: {self.phone}\nCellphone: {self.cellphone}\nAddress: {self.address}\nPerson Type: {self.person_type}\n")
