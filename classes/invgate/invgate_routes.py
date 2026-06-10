@@ -8,6 +8,9 @@ class InvgateRoutes:
     def computer(id):
         return f"/public-api/computers/{id}/"
     
+    def computer_all_attributes(id):
+        return f"/public-api/computers/{id}/?include=reported_motherboard.specs.manufacturer,reported_cpus.specs.manufacturer,reported_rams.specs.manufacturer"
+    
     def computer_motherboard(id):
         return f"/public-api/computers/{id}?include=reported_motherboard.specs.manufacturer"
     
