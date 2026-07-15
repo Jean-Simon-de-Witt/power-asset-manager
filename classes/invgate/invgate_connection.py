@@ -228,8 +228,10 @@ class InvgateConnection:
 
     # Runs all populate functions
     def populate(self):
+        print("Populating data...")
         self.populate_users()
         self.populate_computers()
+        print("Data populated")
 
     # Gets all users and stores them as classes in memory
     def populate_users(self):
@@ -258,6 +260,7 @@ class InvgateConnection:
             computer_data = extracted_data.get("data", [])
             included_data = extracted_data.get("included", [])
 
+        # 1. Build the Hardware Specs Lookup Dictionary
         included_lookup = {}
         for item in included_data:
             item_type = item.get("type")
@@ -266,6 +269,7 @@ class InvgateConnection:
                 included_lookup[item_type] = {}
             included_lookup[item_type][item_id] = item
 
+        # 2. Build the Bulk Finance Lookup Dictionary
         finance_raw_data = self.get_data(routes.financials())
         
         if isinstance(finance_raw_data, list):
@@ -278,6 +282,7 @@ class InvgateConnection:
             f_id = str(record.get("id"))
             finance_lookup[f_id] = record
 
+        # Helper Function for 3-Jump hardware lookups
         def get_hardware_details(relationship_data, expected_reported_type, expected_model_type):
             if not relationship_data:
                 return {}, {}
@@ -298,12 +303,13 @@ class InvgateConnection:
             return model_item, man_item
         # ---------------------------------------
 
-        # Loop through all computers
+        # 3. Loop through all computers and build class instances
         for c in computer_data:
             c_id = c.get("id")
             a = c.get("attributes", {})
             r = c.get("relationships", {})
 
+            # Get hardware spec items
             cpu_model, cpu_man = get_hardware_details(r.get("reported_cpus", {}).get("data"), "ReportedCPU", "CPUModel")
             cpu_attrs = cpu_model.get("attributes", {})
             cpu_man_attrs = cpu_man.get("attributes", {})
@@ -316,13 +322,37 @@ class InvgateConnection:
             mb_attrs = mb_model.get("attributes", {})
             mb_man_attrs = mb_man.get("attributes", {})
 
+            # Get finance data
             finance_pointer = r.get("finance", {}).get("data")
             f = {}
             if finance_pointer:
                 target_finance_id = str(finance_pointer.get("id"))
                 raw_f = finance_lookup.get(target_finance_id, {})
-                f = raw_f.get("attributes", raw_f) # Fallback to root if 'attributes' doesn't exist
-            # ------------------------------------------
+                f = raw_f.get("attributes", raw_f)
+
+            # ==========================================
+            # Extract Wi-Fi MAC Address via OSInfo jump
+            # ==========================================
+            wifi_mac = None
+            osinfo_pointer = r.get("osinfo_set", {}).get("data", [])
+            
+            if osinfo_pointer:
+                os_id = osinfo_pointer[0].get("id")
+                os_record = included_lookup.get("OSInfo", {}).get(os_id, {})
+                
+                adapters_pointer = os_record.get("relationships", {}).get("network_adapters", {}).get("data", [])
+                
+                for adapter in adapters_pointer:
+                    adapter_id = adapter.get("id")
+                    adapter_record = included_lookup.get("NetworkAdapter", {}).get(adapter_id, {})
+                    
+                    mac = adapter_record.get("attributes", {}).get("mac")
+                    device_type = adapter_record.get("attributes", {}).get("device_id", "")
+                    
+                    if mac and device_type == "Wi-Fi":
+                        wifi_mac = mac
+                        break  # Match found, terminate search loop
+            # ==========================================
 
             computer = InvgateComputer(
                 c_id,
@@ -339,6 +369,9 @@ class InvgateConnection:
                 a.get("antivirus_status"), 
                 a.get("connection_status"), 
                 a.get("lifecycle_status"), 
+                
+                # We append our new wifi_mac field right here
+                wifi_mac,
                 
                 InvgateMotherboard(
                     mb_model.get("id"), mb_attrs.get("model"), 
@@ -358,6 +391,21 @@ class InvgateConnection:
             )
             
             self.computers.append(computer)
+
+    def get_computer_by_id(self, computer_id) -> InvgateComputer:
+        for computer in self.computers:
+            if computer.id == computer_id:
+                return computer
+            
+    def get_computer_by_name(self, computer_name) -> InvgateComputer:
+        for computer in self.computers:
+            if computer.name == computer_name:
+                return computer
+            
+    def get_computer_by_mac(self, mac_address) -> InvgateComputer:
+        for computer in self.computers:
+            if computer.mac_address == mac_address:
+                return computer 
 
 
 

@@ -3,13 +3,13 @@ class InvgateRoutes:
         return "/public-api/computers/"
     
     def computers_all_attributes():
-        return "/public-api/computers/?include=reported_motherboard.specs.manufacturer,reported_cpus.specs.manufacturer,reported_rams.specs.manufacturer"
+        return "/public-api/computers/?include=reported_motherboard.specs.manufacturer,reported_cpus.specs.manufacturer,reported_rams.specs.manufacturer,osinfo_set.network_adapters.nic"
     
     def computer(id):
         return f"/public-api/computers/{id}/"
     
     def computer_all_attributes(id):
-        return f"/public-api/computers/{id}/?include=reported_motherboard.specs.manufacturer,reported_cpus.specs.manufacturer,reported_rams.specs.manufacturer"
+        return f"/public-api/computers/{id}/?include=reported_motherboard.specs.manufacturer,reported_cpus.specs.manufacturer,reported_rams.specs.manufacturer,osinfo_set.network_adapters.nic"
     
     def computer_motherboard(id):
         return f"/public-api/computers/{id}?include=reported_motherboard.specs.manufacturer"
