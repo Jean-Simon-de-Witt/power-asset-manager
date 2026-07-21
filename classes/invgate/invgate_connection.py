@@ -1,3 +1,5 @@
+import json
+
 import requests
 from classes.invgate.invgate_routes import InvgateRoutes as routes
 from classes.invgate.invgate_user import InvgateUser
@@ -139,8 +141,12 @@ class InvgateConnection:
         full_url = f"{self.domain}{endpoint_path}"
 
         try:
+            headers = {
+                "Content-Type": "application/vnd.api+json",
+                "Accept": "application/vnd.api+json"
+            }
             # Requests library automatically formats data correctly for JSON payload when using json=payload
-            response = self.session.post(full_url, json=payload)
+            response = self.session.post(full_url, headers=headers, data=json.dumps(payload))
             response.raise_for_status()
             return response.json()
         
@@ -157,6 +163,40 @@ class InvgateConnection:
     def put_data(self, endpoint_path, payload):
         # End if not authenticated
         if not self.access_token:
+            print("Unable to make request: Not authenticated")
+            return None
+        
+        # Ensure endpoint starts with a slash
+        if not endpoint_path.startswith('/'):
+            endpoint_path = '/' + endpoint_path
+
+        # Ensure endpoint ends with a slash to prevent 502 Bad Gateway redirect loops
+        if not endpoint_path.endswith('/'):
+            endpoint_path = endpoint_path + '/'
+
+        full_url = f"{self.domain}{endpoint_path}"
+
+        try:
+            # Force the strict JSON:API headers required by InvGate
+            headers = {
+                "Content-Type": "application/vnd.api+json",
+                "Accept": "application/vnd.api+json"
+            }
+            
+            # Use data=json.dumps() so the requests library doesn't overwrite the Content-Type
+            response = self.session.put(full_url, data=json.dumps(payload), headers=headers)
+            response.raise_for_status()
+            return response.json()
+            
+        except requests.exceptions.RequestException as e:
+            print(f"PUT request failed for {endpoint_path}: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                print(f"Server response: {e.response.text}")
+                return None
+    
+    def patch_data(self, endpoint_path, payload):
+        if not self.access_token:
+            print("Unable to make request: Not authenticated")
             return None
         
         if not endpoint_path.startswith('/'):
@@ -165,15 +205,18 @@ class InvgateConnection:
         full_url = f"{self.domain}{endpoint_path}"
 
         try:
-            response = self.session.put(full_url, json=payload)
+            headers = {
+            "Content-Type": "application/vnd.api+json",
+            "Accept": "application/vnd.api+json"
+            }
+            response = self.session.patch(full_url, data=json.dumps(payload), headers=headers)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            print(f"PUT request failed for {endpoint_path}: {e}")
+            print(f"PATCH request failed for {endpoint_path}: {e}")
             if hasattr(e, 'response') and e.response is not None:
                 print(f"Server response: {e.response.text}")
                 return None
-    
     # ==============================================================================================
     # Delete Data function: Deletes records from the system using the authenticated session
     # ==============================================================================================
@@ -406,6 +449,12 @@ class InvgateConnection:
         for computer in self.computers:
             if computer.mac_address == mac_address:
                 return computer 
+
+    def create_computer(self, computer: InvgateComputer):
+        self.post_data(routes.assets(), computer.to_asset_payload())
+
+    def update_computer(self, computer: InvgateComputer):
+        self.patch_data(routes.asset(computer.id), computer.to_asset_payload())
 
 
 

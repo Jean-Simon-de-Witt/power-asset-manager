@@ -46,3 +46,9 @@ class InvgateRoutes:
     
     def software(id):
         return f"public-api/installed-software/{id}/"
+    
+    def assets():
+        return "public-api/assets-lite/"
+    
+    def asset(id):
+        return f"public-api/assets-lite/{id}/"
