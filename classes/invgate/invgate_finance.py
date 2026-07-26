@@ -14,6 +14,9 @@ class InvgateFinance:
         self.order_id = order_id
         self.invoice_id = invoice_id
 
-    def to_string(self):
-        return f"ID: {self.id}\nAsset: {self.asset}\nAcquisition Type: {self.acquisition_type}\nAcquisition Date: {self.acquisition_date}\nAcquisition Price: {self.acquisition_price}\nActual Price: {self.actual_price}\nResidual Value: {self.residual_value}\nDepreciation Percentage: {self.depreciation_percentage}\nWarranty Date: {self.warranty_date}\nSupplier: {self.supplier}\nCost Center: {self.cost_center}\nOrder ID: {self.order_id}\nInvoice ID: {self.invoice_id}\n"
-    
+    def to_string(self) -> str:
+        if self.id and self.asset:
+            string = f"ID: {self.id}\nAsset: {self.asset}\nAcquisition Type: {self.acquisition_type}\nAcquisition Date: {self.acquisition_date}\nAcquisition Price: {self.acquisition_price}\nActual Price: {self.actual_price}\nResidual Value: {self.residual_value}\nDepreciation Percentage: {self.depreciation_percentage}\nWarranty Date: {self.warranty_date}\nSupplier: {self.supplier}\nCost Center: {self.cost_center}\nOrder ID: {self.order_id}\nInvoice ID: {self.invoice_id}\n"
+        else:
+            string = "Finance not found."
+        return string
