@@ -3,10 +3,7 @@ import json
 import requests
 from classes.invgate.invgate_routes import InvgateRoutes as routes
 from classes.invgate.invgate_user import InvgateUser
-from classes.invgate.invgate_computer import InvgateComputer
-from classes.invgate.invgate_cpu import InvgateCPU
-from classes.invgate.invgate_motherboard import InvgateMotherboard
-from classes.invgate.invgate_ram import InvgateRAM
+from classes.invgate.invgate_asset import InvgateAsset
 from classes.invgate.invgate_finance import InvgateFinance
 
 class InvgateConnection:
@@ -56,7 +53,7 @@ class InvgateConnection:
     # ==============================================================================================
     # Get Data function: Makes GET requests to the API using the authenticated session.
     # ==============================================================================================
-    def get_data(self, endpoint_path):
+    def get_data(self, endpoint_path, page = None, v1=False):
         # Ends if not authenticated
         if not self.access_token:
             print("Unable to make request: Not authenticated")
@@ -67,61 +64,24 @@ class InvgateConnection:
             endpoint_path = '/' + endpoint_path
 
         full_url = f"{self.domain}{endpoint_path}"
+        if page:
+            full_url = full_url + f"?page={page}"
 
         try:
-            # Make the FIRST request exactly as provided
-            response = self.session.get(full_url)
-            response.raise_for_status()
-            response_json = response.json()
-
-            # Check how InvGate formatted the response
-            list_key = 'data' if 'data' in response_json else 'results'
-
-            # ==========================================
-            # BRANCH 1: LIST OF ITEMS (PAGINATION)
-            # ==========================================
-            if list_key in response_json and isinstance(response_json[list_key], list):
-                all_data = []
-                all_included = []
-                
-                all_data.extend(response_json[list_key]) 
-                if "included" in response_json:
-                    all_included.extend(response_json["included"])
-
-                next_url = self.get_next_url(response_json)
-                
-                # Loop through remaining pages
-                while next_url:
-                    if not next_url.startswith('http'):
-                        next_url = f"{self.domain}{next_url}"
-
-                    # Fix the comma encoding bug
-                    next_url = next_url.replace("%2C", ",")
-
-                    response = self.session.get(next_url)
-                    response.raise_for_status()
-                    response_json = response.json()
-                    
-                    all_data.extend(response_json[list_key])
-
-                    if "included" in response_json:
-                        all_included.extend(response_json["included"])
-
-                    next_url = self.get_next_url(response_json)
-                    
-                # --> RETURN LOGIC FOR LISTS ONLY <--
-                if all_included:
-                    return {"data": all_data, "included": all_included}
-                else:
-                    return all_data
-
-            # ==========================================
-            # BRANCH 2: SINGLE RECORD
-            # ==========================================
+            if v1:
+                headers = {
+                    "Content-Type": "application/vnd.api+json",
+                    "Accept": "application/vnd.api+json"
+                }
             else:
-                # E.g. User 888 or Finance 919
-                return response_json
-                
+                headers = {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                }
+            response = self.session.get(full_url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+
         except requests.exceptions.RequestException as e:
             print(f"GET request failed for {endpoint_path}: {e}")
             return None
@@ -240,235 +200,67 @@ class InvgateConnection:
             print(f"DELETE request failed for {endpoint_path}: {e}")
             return None
 
-    # =========================================================================================================
-    # Specific API endpoint functions: These use the generic get/post/put/delete functions with specific routes
-    # =========================================================================================================
+    # ===========================================================================================
+    # Populate Methods: Methods to fetch data from Invgate and instantiate them as Python objects
+    # ===========================================================================================
 
-    def get_users(self):
-        return self.get_data(routes.users())
-    
+    # Gets a single user from Invgate and returns a User object.
     def get_user(self, id):
-        return self.get_data(routes.user(id))
-    
-    def get_computers(self):
-        return self.get_data(routes.computers_all_attributes())
+        response = self.get_data(routes.user(id))
+        user = InvgateUser(name = response.get("name"), id = response.get("id"), email = response.get("email"), date_of_birth = response.get("date_of_birth"), employee_id = response.get("employee_id"), position = response.get("position"), department = response.get("department"), company = response.get("company"), phone = response.get("phone"), cellphone = response.get("cellphone"), address = response.get("address"), person_type = response.get("person_type"), user = response.get("user"), manager = response.get("manager"), location = response.get("location"), cost_center = response.get("cost_center"))
+        return user
 
-    def get_computer(self, id):
-        return self.get_data(routes.computer_all_attributes(id))
-    
-    def get_locations(self):
-        return self.get_data(routes.locations())
-    
-    def get_finances(self):
-        return self.get_data(routes.financials())
-    
+    # Gets all users on the specified page from Invgate and returns the count, previous page, next page, and a list of User objects. If no page is specified, returns data from the first page.
+    def get_users(self, page = None):
+        if page:
+            response = self.get_data(routes.users(), page = page)
+        else:
+            response = self.get_data(routes.users())
+
+        if response and response["results"]:
+            results = {"count": response.get("count")}
+
+            if response["next"]:
+                results["next"] = response.get("next")
+
+            if response["previous"]:
+                results["previous"] = response.get("previous")
+            users = response.get("results")
+            results["users"] = []
+            for u in users:
+                results["users"].append(InvgateUser(name = u.get("name"), id = u.get("id"), email = u.get("email"), date_of_birth = u.get("date_of_birth"), employee_id = u.get("employee_id"), position = u.get("position"), department = u.get("department"), company = u.get("company"), phone = u.get("phone"), cellphone = u.get("cellphone"), address = u.get("address"), person_type = u.get("person_type"), user = u.get("user"), manager = u.get("manager"), location = u.get("location"), cost_center = u.get("cost_center")))
+            return results
+
+        else: 
+            print("No results.")
+            return None
+
     def get_finance(self, id):
-        return self.get_data(routes.financial(id))
-        
-    # ==========================================================================================================
-    # Populate functions: These get data from the API and convert it into class instances stored in this class
-    # ==========================================================================================================
+        response = self.get_data(routes.financial(id))
+        finance = InvgateFinance(id = response.get("id"), asset = response.get("asset"), acquisition_type = response.get("acquisition_type"), acquisition_date = response.get("acquisition_date"), acquisition_price = response.get("acquisition_price"), actual_price = response.get("actual_price"), residual_value = response.get("residual_value"), depreciation_percentage = response.get("depreciation_percentage"), warranty_date = response.get("warranty_date"), supplier = response.get("supplier"), cost_center = response.get("cost_center"), order_id = response.get("order_id"), invoice_id = response.get("invoice_id"))
+        return finance
 
-    # Runs all populate functions
-    def populate(self):
-        print("Populating data...")
-        self.populate_users()
-        self.populate_computers()
-        print("Data populated")
-
-    # Gets all users and stores them as classes in memory
-    def populate_users(self):
-        self.users = []
-        user_data = self.get_users()
-
-        for u in user_data:
-            u_id = u.get("id")
-            a = u.get("attributes")
-            user = InvgateUser(u_id, a["name"], a["email"], a["email_display"], a["date_of_birth"], a["person_id"], a["position"], a["department"], a["company"], a["phone"], a["cellphone"], a["address"], a["person_type"], a["is_deleted"])
-            self.users.append(user)
-
-    def populate_computers(self):
-        self.computers = []
-        
-        extracted_data = self.get_computers()
-        
-        if not extracted_data:
-            print("Warning: Could not fetch computers. Skipping population.")
-            return
-
-        if isinstance(extracted_data, list):
-            computer_data = extracted_data
-            included_data = []
+    def get_finances(self, page = None):
+        if page:
+            response = self.get_data(routes.financials(), page = page)
         else:
-            computer_data = extracted_data.get("data", [])
-            included_data = extracted_data.get("included", [])
+            response = self.get_data(routes.financials())
 
-        # 1. Build the Hardware Specs Lookup Dictionary
-        included_lookup = {}
-        for item in included_data:
-            item_type = item.get("type")
-            item_id = item.get("id")
-            if item_type not in included_lookup:
-                included_lookup[item_type] = {}
-            included_lookup[item_type][item_id] = item
+        if response and response["results"]:
+            results = {"count": response.get("count")}
 
-        # 2. Build the Bulk Finance Lookup Dictionary
-        finance_raw_data = self.get_data(routes.financials())
-        
-        if isinstance(finance_raw_data, list):
-            finance_list = finance_raw_data
+            if response["next"]:
+                results["next"] = response.get("next")
+
+            if response["previous"]:
+                results["previous"] = response.get("previous")
+
+            finances = response.get("results")
+            results["finances"] = []
+
+            for f in finances:
+                results["finances"].append(InvgateFinance(id = f.get("id"), asset = f.get("asset"), acquisition_type = f.get("acquisition_type"), acquisition_date = f.get("acquisition_date"), acquisition_price = f.get("acquisition_price"), actual_price = f.get("actual_price"), residual_value = f.get("residual_value"), depreciation_percentage = f.get("depreciation_percentage"), warranty_date = f.get("warranty_date"), supplier = f.get("supplier"), cost_center = f.get("cost_center"), order_id = f.get("order_id"), invoice_id = f.get("invoice_id")))
+            return results
         else:
-            finance_list = finance_raw_data.get("data", []) if finance_raw_data else []
-            
-        finance_lookup = {}
-        for record in finance_list:
-            f_id = str(record.get("id"))
-            finance_lookup[f_id] = record
-
-        # Helper Function for 3-Jump hardware lookups
-        def get_hardware_details(relationship_data, expected_reported_type, expected_model_type):
-            if not relationship_data:
-                return {}, {}
-            
-            pointer = relationship_data[0] if isinstance(relationship_data, list) else relationship_data
-            reported_item = included_lookup.get(expected_reported_type, {}).get(pointer.get("id"), {})
-            
-            model_pointer = reported_item.get("relationships", {}).get("specs", {}).get("data", {})
-            model_item = {}
-            if model_pointer:
-                model_item = included_lookup.get(expected_model_type, {}).get(model_pointer.get("id"), {})
-                
-            man_pointer = model_item.get("relationships", {}).get("manufacturer", {}).get("data", {})
-            man_item = {}
-            if man_pointer:
-                man_item = included_lookup.get("Manufacturer", {}).get(man_pointer.get("id"), {})
-                
-            return model_item, man_item
-        # ---------------------------------------
-
-        # 3. Loop through all computers and build class instances
-        for c in computer_data:
-            c_id = c.get("id")
-            a = c.get("attributes", {})
-            r = c.get("relationships", {})
-
-            # Get hardware spec items
-            cpu_model, cpu_man = get_hardware_details(r.get("reported_cpus", {}).get("data"), "ReportedCPU", "CPUModel")
-            cpu_attrs = cpu_model.get("attributes", {})
-            cpu_man_attrs = cpu_man.get("attributes", {})
-
-            ram_model, ram_man = get_hardware_details(r.get("reported_rams", {}).get("data"), "ReportedRAMModule", "RAMModuleModel")
-            ram_attrs = ram_model.get("attributes", {})
-            ram_man_attrs = ram_man.get("attributes", {})
-
-            mb_model, mb_man = get_hardware_details(r.get("reported_motherboard", {}).get("data"), "ReportedMotherboard", "MotherboardModel")
-            mb_attrs = mb_model.get("attributes", {})
-            mb_man_attrs = mb_man.get("attributes", {})
-
-            # Get finance data
-            finance_pointer = r.get("finance", {}).get("data")
-            f = {}
-            if finance_pointer:
-                target_finance_id = str(finance_pointer.get("id"))
-                raw_f = finance_lookup.get(target_finance_id, {})
-                f = raw_f.get("attributes", raw_f)
-
-            # ==========================================
-            # Extract Wi-Fi MAC Address via OSInfo jump
-            # ==========================================
-            wifi_mac = None
-            osinfo_pointer = r.get("osinfo_set", {}).get("data", [])
-            
-            if osinfo_pointer:
-                os_id = osinfo_pointer[0].get("id")
-                os_record = included_lookup.get("OSInfo", {}).get(os_id, {})
-                
-                adapters_pointer = os_record.get("relationships", {}).get("network_adapters", {}).get("data", [])
-                
-                for adapter in adapters_pointer:
-                    adapter_id = adapter.get("id")
-                    adapter_record = included_lookup.get("NetworkAdapter", {}).get(adapter_id, {})
-                    
-                    mac = adapter_record.get("attributes", {}).get("mac")
-                    device_type = adapter_record.get("attributes", {}).get("device_id", "")
-                    
-                    if mac and device_type == "Wi-Fi":
-                        wifi_mac = mac
-                        break  # Match found, terminate search loop
-            # ==========================================
-
-            computer = InvgateComputer(
-                c_id,
-                a.get("total_storage"), 
-                a.get("total_ram"), 
-                a.get("format_type"), 
-                a.get("name"), 
-                a.get("inventory_id"), 
-                a.get("serial"), 
-                a.get("virtual"), 
-                a.get("match_field"), 
-                a.get("firewall_status"), 
-                a.get("status"), 
-                a.get("antivirus_status"), 
-                a.get("connection_status"), 
-                a.get("lifecycle_status"), 
-                
-                # We append our new wifi_mac field right here
-                wifi_mac,
-                
-                InvgateMotherboard(
-                    mb_model.get("id"), mb_attrs.get("model"), 
-                    mb_man_attrs.get("name"), mb_man.get("id"), mb_man_attrs.get("support_url"), mb_man_attrs.get("website_url")
-                ), 
-                InvgateCPU(
-                    cpu_model.get("id"), cpu_attrs.get("model_name"), cpu_attrs.get("model"), cpu_attrs.get("kind"), cpu_attrs.get("import_uuid"), cpu_attrs.get("updated_at"), cpu_attrs.get("family"), cpu_attrs.get("frequency"), cpu_attrs.get("cores"), 
-                    cpu_man.get("id"), cpu_man_attrs.get("name"), cpu_man_attrs.get("support_url"), cpu_man_attrs.get("website_url")
-                ), 
-                InvgateRAM(
-                    ram_model.get("id"), ram_attrs.get("model_name"), ram_attrs.get("model"), ram_attrs.get("kind"), ram_attrs.get("import_uuid"), ram_attrs.get("updated_at"), ram_attrs.get("capacity"), ram_attrs.get("speed"), ram_attrs.get("device_type"), ram_attrs.get("width"), 
-                    ram_man.get("id"), ram_man_attrs.get("name"), ram_man_attrs.get("support_url"), ram_man_attrs.get("website_url")
-                ), 
-                InvgateFinance(
-                    f.get("id"), f.get("asset"), f.get("acquisition_type"), f.get("acquisition_date"), f.get("acquisition_price"), f.get("actual_price"), f.get("depreciation_percentage"), f.get("residual_value"), f.get("warranty_date"), f.get("supplier"), f.get("cost_center"), f.get("order_id"), f.get("invoice_id")
-                )
-            )
-            
-            self.computers.append(computer)
-
-    def get_computer_by_id(self, computer_id) -> InvgateComputer:
-        for computer in self.computers:
-            if computer.id == computer_id:
-                return computer
-            
-    def get_computer_by_name(self, computer_name) -> InvgateComputer:
-        for computer in self.computers:
-            if computer.name == computer_name:
-                return computer
-            
-    def get_computer_by_mac(self, mac_address) -> InvgateComputer:
-        for computer in self.computers:
-            if computer.mac_address == mac_address:
-                return computer 
-
-    def create_computer(self, computer: InvgateComputer):
-        self.post_data(routes.assets(), computer.to_asset_payload())
-
-    def update_computer(self, computer: InvgateComputer):
-        self.patch_data(routes.asset(computer.id), computer.to_asset_payload())
-
-
-
-            
-
-
-        
-
-    # ==========================================================================================================
-    # Helper Functions
-    # ==========================================================================================================
-    def get_next_url(self, data_dict):
-        if 'links' in data_dict and isinstance(data_dict['links'], dict):
-            return data_dict['links'].get('next')
-        return data_dict.get('next')
-    
-        
+            print("No results.")
+            return None

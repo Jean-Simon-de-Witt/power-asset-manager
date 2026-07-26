@@ -1,9 +1,8 @@
 class InvgateUser:
-    def __init__(self, name, email ,id = None, email_display = None, date_of_birth = None, employee_id = None, position = None, department = None, company = None, phone = None, cellphone = None, address = None, person_type = None, is_deleted = None):
-        self.id = id
+    def __init__(self, name, id = None, email = None, date_of_birth = None, employee_id = None, position = None, department = None, company = None, phone = None, cellphone = None, address = None, person_type = None, user = None, manager = None, location = None, cost_center = None):
         self.name = name
+        self.id = id
         self.email = email
-        self.email_display = email_display
         self.date_of_birth = date_of_birth
         self.employee_id = employee_id
         self.position = position
@@ -13,35 +12,10 @@ class InvgateUser:
         self.cellphone = cellphone
         self.address = address
         self.person_type = person_type
-        self.is_deleted = is_deleted
+        self.user = user
+        self.manager = manager
+        self.location = location
+        self.cost_center = cost_center
 
-    def print(self):
-        print(f"ID: {self.id}\nName: {self.name}\nEmail: {self.email}\nEmail Display: {self.email_display}\nDate of Birth: {self.data_of_birth}\nEmployee ID: {self.employee_id}\nPosition: {self.position}\nDepartment: {self.department}\nCompany: {self.company}\nPhone: {self.phone}\nCellphone: {self.cellphone}\nAddress: {self.address}\nPerson Type: {self.person_type}\n")
-
-    def to_json(self, include_id=False):
-        attributes = {
-            "name": self.name,
-            "email": self.email,
-            "date_of_birth": self.date_of_birth,
-            "employee_id": self.employee_id,
-            "position": self.position,
-            "department": self.department,
-            "company": self.company,
-            "phone": self.phone,
-            "cellphone": self.cellphone,
-            "address": self.address,
-            "person_type": self.person_type
-        }
-
-        clean_attributes = {k: v for k, v in attributes.items() if v is not None}
-        payload = {
-            "data": {
-                "type": "Person",
-                "attributes": clean_attributes
-            }
-        }
-
-        if include_id and self.id:
-            payload["data"]["id"] = str(self.id)
-        
-        return payload
+    def to_string(self):
+        return f"ID: {self.id}\nName: {self.name}\nEmail: {self.email}\nDate of Birth: {self.date_of_birth}\nEmployee ID: {self.employee_id}\nPosition: {self.position}\nDepartment: {self.department}\nCompany: {self.company}\nPhone: {self.phone}\nCellphone: {self.cellphone}\nAddress: {self.address}\nPerson Type: {self.person_type}\nUser: {self.user}\nManager: {self.manager}\nLocation: {self.location}\nCost Center: {self.cost_center}\n"

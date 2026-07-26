@@ -1,54 +1,64 @@
-class InvgateRoutes:
-    def computers():
-        return "/public-api/computers/"
-    
-    def computers_all_attributes():
-        return "/public-api/computers/?include=reported_motherboard.specs.manufacturer,reported_cpus.specs.manufacturer,reported_rams.specs.manufacturer,osinfo_set.network_adapters.nic"
-    
-    def computer(id):
-        return f"/public-api/computers/{id}/"
-    
-    def computer_all_attributes(id):
-        return f"/public-api/computers/{id}/?include=reported_motherboard.specs.manufacturer,reported_cpus.specs.manufacturer,reported_rams.specs.manufacturer,osinfo_set.network_adapters.nic"
-    
-    def computer_motherboard(id):
-        return f"/public-api/computers/{id}?include=reported_motherboard.specs.manufacturer"
-    
-    def computer_cpu(id):
-        return f"/public-api/computers/{id}?include=reported_cpus.specs.manufacturer"
-    
-    def computer_ram(id):
-        return f"/public-api/computers/{id}?include=reported_rams.specs.manufacturer"
-    
+class InvgateRoutes:    
     def users():
-        return "/public-api/people/"
+        return "/public-api/v2/people/"
     
     def user(id):
-        return f"/public-api/people/{id}/"
-    
-    def locations():
-        return "/public-api/locations/"
-    
-    def location(id):
-        return f"/public-api/locations/{id}/"
-    
-    def tags():
-        return "public-api/tags/"
-    
-    def tag(id):
-        return f"public-api/tags/{id}/"
+        return f"/public-api/v2/people/{id}/"
     
     def financials():
-        return "public-api/finance/"
+        return "/public-api/v2/finance/"
     
     def financial(id):
-        return f"public-api/finance/{id}/"
-    
-    def software(id):
-        return f"public-api/installed-software/{id}/"
+        return f"/public-api/v2/finance/{id}/"
     
     def assets():
-        return "public-api/assets-lite/"
+        return "/public-api/v2/assets-lite/"
     
     def asset(id):
-        return f"public-api/assets-lite/{id}/"
+        return f"/public-api/v2/assets-lite/{id}/"
+
+    def vendors():
+        return "/public-api/v2/vendors/"
+
+    def vendor(id):
+        return f"/public-api/v2/vendors/{id}/"
+    
+    def tags():
+        return "/public-api/v2/tags/"
+
+    def tag(id):
+        return f"/public-api/v2/tags/{id}/"
+
+    def purchase_orders():
+        return "/public-api/v2/purchase-orders/"
+
+    def purchase_order(id):
+        return f"/public-api/v2/purchase-orders/{id}/"
+
+    def manufacturers():
+        return "/public-api/v2/manufacturers/"
+
+    def manufacturer(id):
+        return f"/public-api/v2/manufacturers/{id}/"
+
+    def healths():
+        return "/public-api/v2/health/"
+
+    def health(computer_id):
+        return f"/public-api/v2/health/{computer_id}"
+
+    # This is an API version 1 route. v1 must be set to true when using this path with get_data.
+    def locations():
+        return "/public-api/locations/"
+
+    # This is an API version 1 route. v1 must be set to true when using this path with get_data.
+    def location(id):
+        return f"/public-api/locations/{id}"
+
+    # This is an API version 1 route. v1 must be set to true when using this path with get_data.
+    def statuses():
+        return "/public-api/asset-status/"
+
+    # This is an API version 1 route. v1 must be set to true when using this path with get_data.
+    def status(id):
+        return f"/public-api/asset-status/?ids={id}"
