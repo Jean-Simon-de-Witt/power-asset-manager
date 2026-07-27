@@ -1,5 +1,5 @@
 class InvgateTag:
-    def __init__(self, id = None, name = None, color = None, description = None, smart_tag = None, locked = None):
+    def __init__(self, id, name, color = None, description = None, smart_tag = None, locked = None):
         self.id = id
         self.name = name
         self.color = color
@@ -8,8 +8,4 @@ class InvgateTag:
         self.locked = locked
 
     def to_string(self) -> str:
-        if self.id and self.name:
-            string = f"ID: {self.id}\nName: {self.name}\nColor: {self.color}\nDescription: {self.description}\nSmart Tag: {self.smart_tag}\nLocked: {self.locked}\n"
-        else:
-            string = "Tag not found."
-        return string
+        return f"ID: {self.id}\nName: {self.name}\nColor: {self.color}\nDescription: {self.description}\nSmart Tag: {self.smart_tag}\nLocked: {self.locked}\n"

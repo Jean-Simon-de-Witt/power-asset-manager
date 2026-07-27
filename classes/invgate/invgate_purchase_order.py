@@ -1,5 +1,5 @@
 class InvgatePurchaseOrder:
-    def __init__(self, id = None, order_number = None, vendor = None, purchase_order_type = None, creation_date = None, expected_delivery_date = None, date_delivered = None, ship_method = None, ship_to = None, shipping_address = None, ship_instructions = None, billing_address = None, status = None, subtotal = None, freight = None, handling = None, tax = None, total_cost = None, cost_center = None, contract = None, requested_by = None, items = None):
+    def __init__(self, id, order_number, vendor = None, purchase_order_type = None, creation_date = None, expected_delivery_date = None, date_delivered = None, ship_method = None, ship_to = None, shipping_address = None, ship_instructions = None, billing_address = None, status = None, subtotal = None, freight = None, handling = None, tax = None, total_cost = None, cost_center = None, contract = None, requested_by = None, items = None):
         self.id = id
         self.order_number = order_number
         self.vendor = vendor
@@ -24,8 +24,4 @@ class InvgatePurchaseOrder:
         self.items = items
 
     def to_string(self) -> str:
-        if self.id and self.order_number:
-            string = f"ID: {self.id}\nOrder Number: {self.order_number}\nVendor: {self.vendor}\nPurchase Order Type: {self.purchase_order_type}\nCreation Date: {self.creation_date}\nExpected Delivery Date: {self.expected_delivery_date}\nDate Delivered: {self.date_delivered}\nShip Method: {self.ship_method}\nShip To: {self.ship_to}\nShipping Address: {self.shipping_address}\nShip Instructions: {self.ship_instructions}\nBilling Address: {self.billing_address}\nStatus: {self.status}\nSubtotal: {self.subtotal}\nFreight: {self.freight}\nHandling: {self.handling}\nTax: {self.tax}\nTotal Cost: {self.total_cost}\nCost Center: {self.cost_center}\nContract: {self.contract}\nRequested By: {self.requested_by}\nItems: {self.items}\n"
-        else:
-            string = "Purchase Order not found." 
-        return string
+        return f"ID: {self.id}\nOrder Number: {self.order_number}\nVendor: {self.vendor}\nPurchase Order Type: {self.purchase_order_type}\nCreation Date: {self.creation_date}\nExpected Delivery Date: {self.expected_delivery_date}\nDate Delivered: {self.date_delivered}\nShip Method: {self.ship_method}\nShip To: {self.ship_to}\nShipping Address: {self.shipping_address}\nShip Instructions: {self.ship_instructions}\nBilling Address: {self.billing_address}\nStatus: {self.status}\nSubtotal: {self.subtotal}\nFreight: {self.freight}\nHandling: {self.handling}\nTax: {self.tax}\nTotal Cost: {self.total_cost}\nCost Center: {self.cost_center}\nContract: {self.contract}\nRequested By: {self.requested_by}\nItems: {self.items}\n"

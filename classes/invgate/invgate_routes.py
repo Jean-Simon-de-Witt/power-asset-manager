@@ -56,9 +56,5 @@ class InvgateRoutes:
         return f"/public-api/locations/{id}"
 
     # This is an API version 1 route. v1 must be set to true when using this path with get_data.
-    def statuses():
-        return "/public-api/asset-status/"
-
-    # This is an API version 1 route. v1 must be set to true when using this path with get_data.
-    def status(id):
-        return f"/public-api/asset-status/?ids={id}"
+    def status():
+        return f"/public-api/asset-status/"

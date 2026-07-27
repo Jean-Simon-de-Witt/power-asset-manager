@@ -1,5 +1,5 @@
 class InvgateFinance:
-    def __init__(self, id = None, asset = None, acquisition_type = None, acquisition_date = None, acquisition_price = None, actual_price = None, residual_value = None, depreciation_percentage = None, warranty_date = None, supplier = None, cost_center = None, order_id = None, invoice_id = None):
+    def __init__(self, id, asset, acquisition_type = None, acquisition_date = None, acquisition_price = None, actual_price = None, residual_value = None, depreciation_percentage = None, warranty_date = None, supplier = None, cost_center = None, order_id = None, invoice_id = None):
         self.id = id
         self.asset = asset
         self.acquisition_type = acquisition_type
@@ -15,8 +15,5 @@ class InvgateFinance:
         self.invoice_id = invoice_id
 
     def to_string(self) -> str:
-        if self.id and self.asset:
-            string = f"ID: {self.id}\nAsset: {self.asset}\nAcquisition Type: {self.acquisition_type}\nAcquisition Date: {self.acquisition_date}\nAcquisition Price: {self.acquisition_price}\nActual Price: {self.actual_price}\nResidual Value: {self.residual_value}\nDepreciation Percentage: {self.depreciation_percentage}\nWarranty Date: {self.warranty_date}\nSupplier: {self.supplier}\nCost Center: {self.cost_center}\nOrder ID: {self.order_id}\nInvoice ID: {self.invoice_id}\n"
-        else:
-            string = "Finance not found."
-        return string
+        return f"ID: {self.id}\nAsset: {self.asset}\nAcquisition Type: {self.acquisition_type}\nAcquisition Date: {self.acquisition_date}\nAcquisition Price: {self.acquisition_price}\nActual Price: {self.actual_price}\nResidual Value: {self.residual_value}\nDepreciation Percentage: {self.depreciation_percentage}\nWarranty Date: {self.warranty_date}\nSupplier: {self.supplier}\nCost Center: {self.cost_center}\nOrder ID: {self.order_id}\nInvoice ID: {self.invoice_id}\n"
+        
