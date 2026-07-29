@@ -59,15 +59,32 @@ class InvgateConnection:
     # ==============================================================================================
     # Get Data function: Makes GET requests to the API using the authenticated session.
     # ==============================================================================================
-    def get_data(self, endpoint_path, page = None, v1=False, query = None, full_path = None):
+    def get_data(self, endpoint_path = None, page = None, v1=False, query = None, full_path = None):
+        """
+        Makes a GET request to the API using the authenticated session.
+        
+        Arguments:
+            endpoint_path: The part of the URL after the base URL. Specifies which API route to access. Ignored if full_path is also provided.
+            page: The page to get data from. Used when accessing paginated data.
+            v1: Refers to the version of the Invgate API. The default API version used is version 2. Set v1 to True to access certain routes that are unavailable in version 2 at the moment.
+            query: Specifies query parameters to include in the GET request. Parameters should be separated by & and not contain any spaces. E.g. id=10&name=john.
+            full_path: The full URL. This is used interchangeably with endpoint_path. endpoint_path will be ignored if this value is provided.
+
+        Returns:
+            Dictionary: If results are found, returns a dict object.
+            None: If authentication failed or GET request failed.
+
+        Raises:
+            RequestException: If the GET request failed.
+        """
         # Ends if not authenticated
         if not self.access_token:
             print("Unable to make request: Not authenticated")
             return None
         
-        # Ensure endpoint starts with a slash
-        if not endpoint_path.startswith('/'):
-            endpoint_path = '/' + endpoint_path
+        if endpoint_path:
+            if not endpoint_path.startswith('/'):
+                endpoint_path = '/' + endpoint_path
 
         if full_path:
             full_url = full_path
@@ -219,7 +236,7 @@ class InvgateConnection:
 
     # Gets a single user from Invgate and returns a InvgateUser object.
     def get_user(self, id) -> InvgateUser:
-        response = self.get_data(routes.user(id))
+        response = self.get_data(endpoint_path = routes.user(id))
         if response:
             if response["manager"]:
                 manager = self.get_user(response.get("manager"))
@@ -237,9 +254,9 @@ class InvgateConnection:
     # Gets all users on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateUser objects. If no page is specified, returns data from the first page.
     def get_users(self, page = None) -> list:
         if page:
-            response = self.get_data(routes.users(), page = page)
+            response = self.get_data(endpoint_path = routes.users(), page = page)
         else:
-            response = self.get_data(routes.users())
+            response = self.get_data(endpoint_path = routes.users())
 
         if response and response["results"]:
             results = {"count": response.get("count")}
@@ -270,7 +287,7 @@ class InvgateConnection:
 
     # Gets a single finance from Invgate and returns an InvgateFinance object.
     def get_finance(self, id) -> InvgateFinance:
-        response = self.get_data(routes.financial(id))
+        response = self.get_data(endpoint_path = routes.financial(id))
         if response:
             if response["supplier"]:
                 vendor = self.get_vendor(response.get("supplier"))
@@ -287,9 +304,9 @@ class InvgateConnection:
     # Gets all finances on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateFinance objects. If no page is specified, returns data from the first page.
     def get_finances(self, page = None) -> list:
         if page:
-            response = self.get_data(routes.financials(), page = page)
+            response = self.get_data(endpoint_path = routes.financials(), page = page)
         else:
-            response = self.get_data(routes.financials())
+            response = self.get_data(endpoint_path = routes.financials())
 
         if response and response["results"]:
             results = {"count": response.get("count")}
@@ -321,7 +338,7 @@ class InvgateConnection:
 
     # Gets a single vendor from Invgate and returns an InvgateVendor object.
     def get_vendor(self, id) -> InvgateVendor:
-        response = self.get_data(routes.vendor(id))
+        response = self.get_data(endpoint_path = routes.vendor(id))
         if response:
             return InvgateVendor(company_name = response.get("company_name"), id = response.get("id"), legal_name = response.get("legal_name"), status = response.get("status"), country = response.get("country"), address = response.get("address"), email = response.get("email"), billing_currency = response.get("billing_currency"), phone = response.get("phone"), industry = response.get("industry"))
         return None
@@ -329,9 +346,9 @@ class InvgateConnection:
     # Gets all vendors on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateVendor objects. If no page is specified, returns data from the first page.
     def get_vendors(self, page = None) -> list:
         if page:
-            response = self.get_data(routes.vendors(), page = page)
+            response = self.get_data(endpoint_path = routes.vendors(), page = page)
         else:
-            response = self.get_data(routes.vendors())
+            response = self.get_data(endpoint_path = routes.vendors())
 
         if response and response["results"]:
             results = {"count": response.get("count")}
@@ -354,7 +371,7 @@ class InvgateConnection:
 
     # Gets a single tag from Invgate and returns an InvgateTag object
     def get_tag(self, id) -> InvgateTag:
-        response = self.get_data(routes.tag(id))
+        response = self.get_data(endpoint_path = routes.tag(id))
         if response:
             return InvgateTag(id = response.get("id"), name = response.get("name"), color = response.get("color"), description = response.get("description"), smart_tag = response.get("smart_tag"), locked = response.get("locked"))
         return None
@@ -362,9 +379,9 @@ class InvgateConnection:
     # Gets all tags on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateTag objects. If no page is specified, returns data from the first page.
     def get_tags(self, page = None) -> list:
         if page:
-            response = self.get_data(routes.tags(), page = page)
+            response = self.get_data(endpoint_path = routes.tags(), page = page)
         else:
-            response = self.get_data(routes.tags())
+            response = self.get_data(endpoint_path = routes.tags())
 
         if response and response["results"]:
             results = {"count": response.get("count")}
@@ -387,7 +404,7 @@ class InvgateConnection:
 
     # Gets a single purchase order from Invgate and returns an InvgatePurchaseOrder object
     def get_purchase_order(self, id) -> InvgatePurchaseOrder:
-        response = self.get_data(routes.purchase_order(id))
+        response = self.get_data(endpoint_path = routes.purchase_order(id))
         if response:
             if response["vendor"]:
                 vendor = self.get_vendor(response.get("vendor"))
@@ -399,9 +416,9 @@ class InvgateConnection:
     # Gets all purchase orders on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgatePurchaseOrder objects. If no page is specified, returns data from the first page.
     def get_purchase_orders(self, page = None) -> list:
         if page:
-            response = self.get_data(routes.purchase_orders(), page = page)
+            response = self.get_data(endpoint_path = routes.purchase_orders(), page = page)
         else:
-            response = self.get_data(routes.purchase_orders())
+            response = self.get_data(endpoint_path = routes.purchase_orders())
 
         if response and response["results"]:
             results = {"count": response.get("count")}
@@ -428,7 +445,7 @@ class InvgateConnection:
 
     # Gets a single manufacturer from Invgate and returns an InvgateManufacturer object
     def get_manufacturer(self, id) -> InvgateManufacturer:
-        response = self.get_data(routes.manufacturer(id))
+        response = self.get_data(endpoint_path = routes.manufacturer(id))
         if response:
             return InvgateManufacturer(id = response.get("id"), name = response.get("name"))
         return None
@@ -436,9 +453,9 @@ class InvgateConnection:
     # Gets all manufacturers on the specified page from Invgate and returns the counts, previous page, next page, and a list of InvgateManufacturer objects. If no page is specified, returns data from the first page.
     def get_manufacturers(self, page = None) -> list:
         if page:
-            response = self.get_data(routes.manufacturers(), page = page)
+            response = self.get_data(endpoint_path = routes.manufacturers(), page = page)
         else:
-            response = self.get_data(routes.manufacturers())
+            response = self.get_data(endpoint_path = routes.manufacturers())
 
         if response and response["results"]:
             results = {"count": response.get("count")}
@@ -460,16 +477,16 @@ class InvgateConnection:
             return None
 
     def get_health(self, computer_id) -> InvgateHealth:
-        response = self.get_data(routes.health(computer_id))
+        response = self.get_data(endpoint_path = routes.health(computer_id))
         if response:
             return InvgateHealth(computer = response.get("computer"), updated_at = response.get("updated_at"), health_rule = response.get("health_rule"), status = response.get("status"))
         return None
 
     def get_healths(self, page = None) -> list:
         if page:
-            response = self.get_data(routes.healths(), page = page)
+            response = self.get_data(endpoint_path = routes.healths(), page = page)
         else:
-            response = self.get_data(routes.healths())
+            response = self.get_data(endpoint_path = routes.healths())
         if response and response["results"]:
             results = {"count": response.get("count")}
 
@@ -490,7 +507,7 @@ class InvgateConnection:
             return None
 
     def get_status(self, id) -> InvgateStatus:
-        response = self.get_data(routes.status(), v1 = True, query = f"ids={id}")
+        response = self.get_data(endpoint_path = routes.status(), v1 = True, query = f"ids={id}")
         if response:
             data = response.get("data")[0]
             return InvgateStatus(id = data.get("id"), name = data.get("attributes").get("name"), description = data.get("attributes").get("description"), behavior = data.get("attributes").get("behavior"), is_default = data.get("attributes").get("is_default"))
@@ -498,9 +515,9 @@ class InvgateConnection:
 
     def get_statuses(self, page = None) -> list:
         if page:
-            response = self.get_data(routes.status(), page = page, v1 = True)
+            response = self.get_data(endpoint_path = routes.status(), page = page, v1 = True)
         else:
-            response = self.get_data(routes.status(), v1 = True)
+            response = self.get_data(endpoint_path = routes.status(), v1 = True)
         if response and response["data"]:
             links = response.get("links")
             results = {}
@@ -519,7 +536,7 @@ class InvgateConnection:
             return None
 
     def get_location(self, id) -> InvgateLocation:
-        response = self.get_data(routes.location(id), v1 = True)
+        response = self.get_data(endpoint_path = routes.location(id), v1 = True)
         if response:
             data = response.get("data")[0]
             return InvgateLocation(id = data.get("id"), name = data.get("attributes").get("name"), full_path = data.get("attributes").get("full_path"), description = data.get("attributes").get("description"))
@@ -527,9 +544,9 @@ class InvgateConnection:
 
     def get_locations(self, page = None) -> list:
         if page:
-            response = self.get_data(routes.locations(), page = page, v1 = True)
+            response = self.get_data(endpoint_path = routes.locations(), page = page, v1 = True)
         else:
-            response = self.get_data(routes.locations(), v1 = True)
+            response = self.get_data(endpoint_path = routes.locations(), v1 = True)
 
         if response and response["data"]:
             links = response.get("links")
@@ -550,7 +567,7 @@ class InvgateConnection:
             return None
 
     def get_purchase_order_by_order_id(self, order_id: str) -> InvgatePurchaseOrder:
-        response = self.get_data(routes.purchase_orders())
+        response = self.get_data(endpoint_path = routes.purchase_orders())
         po = None
 
         while True:
@@ -562,7 +579,7 @@ class InvgateConnection:
             if po:
                 break
             if response["next"]:
-                response = self.get_data(routes.purchase_orders(), full_path=response.get("next"))
+                response = self.get_data(full_path = response.get("next"))
 
         if po:
             return InvgatePurchaseOrder(id = po.get("id"), order_number = po.get("order_number"), vendor = po.get("vendor"), purchase_order_type = po.get("purchase_order_type"), creation_date = po.get("creation_date"), expected_delivery_date = po.get("expected_delivery_date"), date_delivered = po.get("date_delivered"), ship_method = po.get("ship_method"), ship_to = po.get("ship_to"), shipping_address = po.get("shipping_address"), ship_instructions = po.get("ship_instructions"), billing_address = po.get("billing_address"), status = po.get("status"), subtotal = po.get("subtotal"), freight = po.get("freight"), handling = po.get("handling"), tax = po.get("tax"), total_cost = po.get("total_cost"), cost_center = po.get("cost_center"), contract = po.get("contract"), requested_by = po.get("requested_by"))
