@@ -20,7 +20,5 @@ if not all([DOMAIN, CLIENT_ID, CLIENT_SECRET]):
 invgate = InvgateConnection(DOMAIN, CLIENT_ID, CLIENT_SECRET)
 
 if invgate.access_token:
-    statuses = invgate.get_statuses().get("statuses")
-    for status in statuses:
-        print(status.to_string())
+    print(invgate.get_finance(200).to_string())
         

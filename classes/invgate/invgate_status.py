@@ -1,9 +1,15 @@
 class InvgateStatus:
-    def __init__(self, id, name, full_path = None, description = None):
+    def __init__(self, id, name, description = None, behavior = None, is_default = False):
         self.id = id
         self.name = name
-        self.full_path = full_path
         self.description = description
+        self.behavior = behavior
+        self.is_default = is_default
 
     def to_string(self):
-        return f"ID: {self.id}\nName: {self.name}\nFull Path: {self.full_path}\nDescription: {self.description}\n"
+        string = f"ID: {self.id}\n"
+        string += f"Name: {self.name}\n"
+        string += f"Description: {self.description}\n"
+        string += f"Behavior: {self.behavior}\n"
+        string += f"Is Default: {self.is_default}\n"
+        return string
