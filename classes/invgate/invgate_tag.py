@@ -1,11 +1,17 @@
 class InvgateTag:
-    def __init__(self, id, name, color = None, description = None, smart_tag = None, locked = None):
-        self.id = id
-        self.name = name
-        self.color = color
-        self.description = description
-        self.smart_tag = smart_tag
-        self.locked = locked
+    def __init__(self, id: int, name: str, color: str = None, description: str = None, smart_tag: bool = False, locked: bool = False):
+        self.id: int = id
+        self.name: str = name
+        self.color: str = color
+        self.description: str = description
+        self.smart_tag: bool = smart_tag
+        self.locked: bool = locked
 
     def to_string(self) -> str:
-        return f"ID: {self.id}\nName: {self.name}\nColor: {self.color}\nDescription: {self.description}\nSmart Tag: {self.smart_tag}\nLocked: {self.locked}\n"
+        string = f"ID: {self.id}\n"
+        string += f"Name: {self.name}\n"
+        string += f"Color: {self.color}\n"
+        string += f"Description: {self.description}\n"
+        string += f"Smart Tag: {self.smart_tag}\n"
+        string += f"Locked: {self.locked}\n"
+        return string

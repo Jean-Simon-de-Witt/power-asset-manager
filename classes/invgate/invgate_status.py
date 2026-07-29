@@ -1,10 +1,10 @@
 class InvgateStatus:
-    def __init__(self, id, name, description = None, behavior = None, is_default = False):
-        self.id = id
-        self.name = name
-        self.description = description
-        self.behavior = behavior
-        self.is_default = is_default
+    def __init__(self, id: int, name: str, description: str = None, behavior: str = None, is_default: bool = False):
+        self.id: int = id
+        self.name: str = name
+        self.description: str = description
+        self.behavior: str = behavior
+        self.is_default: str = is_default
 
     def to_string(self):
         string = f"ID: {self.id}\n"

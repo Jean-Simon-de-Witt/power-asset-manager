@@ -1,22 +1,22 @@
 from classes.invgate.invgate_location import InvgateLocation
 class InvgateUser:
-    def __init__(self, id: int, name: str, email: str = None, date_of_birth: str = None, employee_id: str = None, position: str = None, department: str = None, company: str = None, phone: str = None, cellphone: str = None, address: str = None, person_type: str = None, user: str = None, manager: InvgateUser = None, location: InvgateLocation = None, cost_center = None):
-        self.id = id
-        self.name = name
-        self.email = email
-        self.date_of_birth = date_of_birth
-        self.employee_id = employee_id
-        self.position = position
-        self.department = department
-        self.company = company
-        self.phone = phone
-        self.cellphone = cellphone
-        self.address = address
-        self.person_type = person_type
-        self.user = user
-        self.manager = manager
-        self.location = location
-        self.cost_center = cost_center
+    def __init__(self, id: int, name: str, email: str = None, date_of_birth: str = None, employee_id: str = None, position: str = None, department: str = None, company: str = None, phone: str = None, cellphone: str = None, address: str = None, person_type: str = None, user: str = None, manager: InvgateUser = None, location: InvgateLocation = None, cost_center: str = None):
+        self.id: int = id
+        self.name: str = name
+        self.email: str = email
+        self.date_of_birth: str = date_of_birth
+        self.employee_id: str = employee_id
+        self.position: str = position
+        self.department: str = department
+        self.company: str = company
+        self.phone: str = phone
+        self.cellphone: str = cellphone
+        self.address: str = address
+        self.person_type: str = person_type
+        self.user: str = user
+        self.manager: InvgateUser = manager
+        self.location: InvgateLocation = location
+        self.cost_center: str = cost_center
 
     def to_string(self) -> str:
         string = f"ID: {self.id}\n"

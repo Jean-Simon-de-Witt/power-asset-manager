@@ -1,9 +1,9 @@
 class InvgateLocation:
-    def __init__(self, id, name, full_path = None, description = None):
-        self.id = id
-        self.name = name
-        self.full_path = full_path
-        self.description = description
+    def __init__(self, id: int, name: str, full_path: str = None, description: str = None):
+        self.id: int = id
+        self.name: str = name
+        self.full_path: str = full_path
+        self.description: str = description
 
     def to_string(self) -> str:
         string = f"ID: {self.id}\n"

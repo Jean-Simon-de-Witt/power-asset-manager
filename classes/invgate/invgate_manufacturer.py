@@ -1,7 +1,9 @@
 class InvgateManufacturer:
-    def __init__(self, id, name):
-        self.id = id
-        self.name = name
+    def __init__(self, id: int, name: str):
+        self.id: int = id
+        self.name: str = name
 
     def to_string(self) -> str:
-        return f"ID: {self.id}\nName: {self.name}\n"
+        string = f"ID: {self.id}\n"
+        string += f"Name: {self.name}\n"
+        return string

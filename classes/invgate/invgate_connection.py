@@ -273,7 +273,7 @@ class InvgateConnection:
         response = self.get_data(routes.financial(id))
         if response:
             if response["supplier"]:
-                vendor = self.get_vendor(response.get("vendor"))
+                vendor = self.get_vendor(response.get("supplier"))
             else:
                 vendor = None
 
@@ -304,7 +304,16 @@ class InvgateConnection:
             results["finances"] = []
 
             for f in finances:
-                results["finances"].append(InvgateFinance(id = f.get("id"), asset = f.get("asset"), acquisition_type = f.get("acquisition_type"), acquisition_date = f.get("acquisition_date"), acquisition_price = f.get("acquisition_price"), actual_price = f.get("actual_price"), residual_value = f.get("residual_value"), depreciation_percentage = f.get("depreciation_percentage"), warranty_date = f.get("warranty_date"), supplier = f.get("supplier"), cost_center = f.get("cost_center"), order_id = f.get("order_id"), invoice_id = f.get("invoice_id")))
+                if f["supplier"]:
+                    vendor = self.get_vendor(f.get("supplier"))
+                else:
+                    vendor = None
+
+                if f["order_id"]:
+                    purchase_order = self.get_purchase_order_by_order_id(f.get("order_id"))
+                else:
+                    purchase_order = None
+                results["finances"].append(InvgateFinance(id = f.get("id"), asset = f.get("asset"), acquisition_type = f.get("acquisition_type"), acquisition_date = f.get("acquisition_date"), acquisition_price = f.get("acquisition_price"), actual_price = f.get("actual_price"), residual_value = f.get("residual_value"), depreciation_percentage = f.get("depreciation_percentage"), warranty_date = f.get("warranty_date"), vendor = vendor, cost_center = f.get("cost_center"), purchase_order = purchase_order, invoice_id = f.get("invoice_id")))
             return results
         else:
             print("No results.")
@@ -380,7 +389,11 @@ class InvgateConnection:
     def get_purchase_order(self, id) -> InvgatePurchaseOrder:
         response = self.get_data(routes.purchase_order(id))
         if response:
-            return InvgatePurchaseOrder(id = response.get("id"), order_number = response.get("order_number"), vendor = response.get("vendor"), purchase_order_type = response.get("purchase_order_type"), creation_date = response.get("creation_date"), expected_delivery_date = response.get("expected_delivery_date"), date_delivered = response.get("date_delivered"), ship_method = response.get("ship_method"), ship_to = response.get("ship_to"), shipping_address = response.get("shipping_address"), ship_instructions = response.get("ship_instructions"), billing_address = response.get("billing_address"), status = response.get("status"), subtotal = response.get("subtotal"), freight = response.get("freight"), handling = response.get("handling"), tax = response.get("tax"), total_cost = response.get("total_cost"), cost_center = response.get("cost_center"), contract = response.get("contract"), requested_by = response.get("requested_by"), items = response.get("items"))
+            if response["vendor"]:
+                vendor = self.get_vendor(response.get("vendor"))
+            else:
+                vendor = None
+            return InvgatePurchaseOrder(id = response.get("id"), order_number = response.get("order_number"), vendor = vendor, purchase_order_type = response.get("purchase_order_type"), creation_date = response.get("creation_date"), expected_delivery_date = response.get("expected_delivery_date"), date_delivered = response.get("date_delivered"), ship_method = response.get("ship_method"), ship_to = response.get("ship_to"), shipping_address = response.get("shipping_address"), ship_instructions = response.get("ship_instructions"), billing_address = response.get("billing_address"), status = response.get("status"), subtotal = response.get("subtotal"), freight = response.get("freight"), handling = response.get("handling"), tax = response.get("tax"), total_cost = response.get("total_cost"), cost_center = response.get("cost_center"), contract = response.get("contract"), requested_by = response.get("requested_by"), items = response.get("items"))
         return None
 
     # Gets all purchase orders on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgatePurchaseOrder objects. If no page is specified, returns data from the first page.
@@ -403,7 +416,11 @@ class InvgateConnection:
             results["purchase_orders"] = []
 
             for po in purchase_orders:
-                results["purchase_orders"].append(InvgatePurchaseOrder(id = po.get("id"), order_number = po.get("order_number"), vendor = po.get("vendor"), purchase_order_type = po.get("purchase_order_type"), creation_date = po.get("creation_date"), expected_delivery_date = po.get("expected_delivery_date"), date_delivered = po.get("date_delivered"), ship_method = po.get("ship_method"), ship_to = po.get("ship_to"), shipping_address = po.get("shipping_address"), ship_instructions = po.get("ship_instructions"), billing_address = po.get("billing_address"), status = po.get("status"), subtotal = po.get("subtotal"), freight = po.get("freight"), handling = po.get("handling"), tax = po.get("tax"), total_cost = po.get("total_cost"), cost_center = po.get("cost_center"), contract = po.get("contract"), requested_by = po.get("requested_by"), items = po.get("items")))
+                if po["vendor"]:
+                    vendor = self.get_vendor(po.get("vendor"))
+                else:
+                    vendor = None
+                results["purchase_orders"].append(InvgatePurchaseOrder(id = po.get("id"), order_number = po.get("order_number"), vendor = vendor, purchase_order_type = po.get("purchase_order_type"), creation_date = po.get("creation_date"), expected_delivery_date = po.get("expected_delivery_date"), date_delivered = po.get("date_delivered"), ship_method = po.get("ship_method"), ship_to = po.get("ship_to"), shipping_address = po.get("shipping_address"), ship_instructions = po.get("ship_instructions"), billing_address = po.get("billing_address"), status = po.get("status"), subtotal = po.get("subtotal"), freight = po.get("freight"), handling = po.get("handling"), tax = po.get("tax"), total_cost = po.get("total_cost"), cost_center = po.get("cost_center"), contract = po.get("contract"), requested_by = po.get("requested_by"), items = po.get("items")))
             return results
         else:
             print("No results.")
@@ -533,9 +550,21 @@ class InvgateConnection:
             return None
 
     def get_purchase_order_by_order_id(self, order_id: str) -> InvgatePurchaseOrder:
-        response = self.get_data(routes.purchase_orders(), query = f"ids={order_id}")
-        if response and response["results"]:
-            po = response.get("results")[0]
+        response = self.get_data(routes.purchase_orders())
+        po = None
+
+        while True:
+            purchase_orders = response.get("results")
+            for purchase_order in purchase_orders:
+                if order_id == purchase_order.get("order_number"):
+                    po = purchase_order
+                    break
+            if po:
+                break
+            if response["next"]:
+                response = self.get_data(routes.purchase_orders(), full_path=response.get("next"))
+
+        if po:
             return InvgatePurchaseOrder(id = po.get("id"), order_number = po.get("order_number"), vendor = po.get("vendor"), purchase_order_type = po.get("purchase_order_type"), creation_date = po.get("creation_date"), expected_delivery_date = po.get("expected_delivery_date"), date_delivered = po.get("date_delivered"), ship_method = po.get("ship_method"), ship_to = po.get("ship_to"), shipping_address = po.get("shipping_address"), ship_instructions = po.get("ship_instructions"), billing_address = po.get("billing_address"), status = po.get("status"), subtotal = po.get("subtotal"), freight = po.get("freight"), handling = po.get("handling"), tax = po.get("tax"), total_cost = po.get("total_cost"), cost_center = po.get("cost_center"), contract = po.get("contract"), requested_by = po.get("requested_by"))
         else:
             return None

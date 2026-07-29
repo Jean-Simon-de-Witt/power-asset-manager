@@ -7,29 +7,29 @@ from classes.invgate.invgate_health import InvgateHealth
 
 class InvgateAsset:
     def __init__(self, name: str, id: int = None, serial: str = None, inventory_id: str = None, asset_physical_tag: str = None, created_at: str = None, reported_at: str = None, updated_at: str = None, status: InvgateStatus = None, location: InvgateLocation = None, owner: InvgateUser = None, finance: InvgateFinance = None, manufacturer: InvgateManufacturer = None, model: str = None, commercial_model: str = None, asset_type: str = None, default_ip: str = None, mac_address: str = None, asset_type_code: str = None, format: str = None, health: InvgateHealth = None):
-        self.id = id
-        self.name = name
-        self.serial = serial
-        self.inventory_id = inventory_id
-        self.asset_physical_tag = asset_physical_tag
-        self.created_at = created_at
-        self.reported_at = reported_at
-        self.updated_at = updated_at
-        self.status = status
-        self.location = location
-        self.owner = owner
-        self.finance = finance
-        self.manufacturer = manufacturer
-        self.model = model
-        self.commercial_model = commercial_model
-        self.asset_type = asset_type
-        self.default_ip = default_ip
-        self.mac_address = mac_address
-        self.asset_type_code = asset_type_code
-        self.format = format
-        self.health = health
+        self.id: int = id
+        self.name: str = name
+        self.serial: str = serial
+        self.inventory_id:str = inventory_id
+        self.asset_physical_tag:str = asset_physical_tag
+        self.created_at: str = created_at
+        self.reported_at: str = reported_at
+        self.updated_at: str = updated_at
+        self.status: InvgateStatus = status
+        self.location: InvgateLocation = location
+        self.owner: InvgateUser = owner
+        self.finance: InvgateFinance = finance
+        self.manufacturer: InvgateManufacturer = manufacturer
+        self.model: str = model
+        self.commercial_model: str = commercial_model
+        self.asset_type: str = asset_type
+        self.default_ip: str = default_ip
+        self.mac_address: str = mac_address
+        self.asset_type_code: str = asset_type_code
+        self.format: str = format
+        self.health: InvgateHealth = health
 
-    def to_string(self):
+    def to_string(self) -> str:
         string = f"ID: {self.id}\n"
         string += f"Name: {self.name}\n"
         string += f"Serial: {self.serial}\n"
