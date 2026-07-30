@@ -11,6 +11,7 @@ from classes.invgate.invgate_manufacturer import InvgateManufacturer
 from classes.invgate.invgate_health import InvgateHealth
 from classes.invgate.invgate_status import InvgateStatus
 from classes.invgate.invgate_location import InvgateLocation
+from classes.invgate.invgate_software import InvgateSoftware
 
 class InvgateConnection:
     # ==============================================================================================
@@ -564,6 +565,18 @@ class InvgateConnection:
                 results["locations"].append(InvgateLocation(id = d.get("id"), name = d.get("attributes").get("name"), full_path = d.get("attributes").get("full_path"), description = d.get("attributes").get("description")))
         else:
             print("No results")
+            return None
+
+    def get_software(self, id) -> InvgateSoftware:
+        response = self.get_data(endpoint_path = routes.software(id))
+        if response:
+            if response["version"]["program"]["manufacturer"]:
+                manufacturer = InvgateManufacturer(id = response.get("version").get("program").get("manufacturer").get("id"), name = response.get("version").get("program").get("manufacturer").get("name"))
+            else:
+                manufacturer = None
+
+            return InvgateSoftware(id = response.get("id"), resource_type = response.get("resource_type"), install_date = response.get("install_date"), install_path = response.get("install_path"), uninstall_call = response.get("uninstall_call"), computer = response.get("computer"), version = response.get("version").get("version"), internal_version = response.get("version").get("internal_version"), edition = response.get("version").get("edition"), name = response.get("version").get("program").get("name"), manufacturer = manufacturer, license = response.get("version").get("program").get("license"), category = response.get("version").get("program").get("category"), types = response.get("version").get("program").get("types"), types_key = response.get("version").get("program").get("types_key"), tags = response.get("version").get("program").get("tags"), is_metering_enabled = response.get("version").get("program").get("is_metering_enabled"))
+        else:
             return None
 
     def get_purchase_order_by_order_id(self, order_id: str) -> InvgatePurchaseOrder:

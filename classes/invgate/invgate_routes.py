@@ -45,7 +45,7 @@ class InvgateRoutes:
         return "/public-api/v2/health/"
 
     def health(computer_id):
-        return f"/public-api/v2/health/{computer_id}"
+        return f"/public-api/v2/health/{computer_id}/"
 
     # This is an API version 1 route. v1 must be set to true when using this path with get_data.
     def locations():
@@ -53,8 +53,14 @@ class InvgateRoutes:
 
     # This is an API version 1 route. v1 must be set to true when using this path with get_data.
     def location(id):
-        return f"/public-api/locations/{id}"
+        return f"/public-api/locations/{id}/"
 
     # This is an API version 1 route. v1 must be set to true when using this path with get_data.
     def status():
-        return f"/public-api/asset-status/"
+        return "/public-api/asset-status/"
+
+    def software(id):
+        return f"/public-api/v2/installed-software/{id}/"
+
+    def softwares():
+        return "/public-api/v2/installed-software/"
