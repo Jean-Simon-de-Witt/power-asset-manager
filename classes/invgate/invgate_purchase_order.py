@@ -1,6 +1,39 @@
 from classes.invgate.invgate_vendor import InvgateVendor
 class InvgatePurchaseOrder:
-    def __init__(self, id: int, order_number: str, vendor: InvgateVendor = None, purchase_order_type: str = None, creation_date: str = None, expected_delivery_date: str = None, date_delivered: str = None, ship_method: str = None, ship_to: str = None, shipping_address: str = None, ship_instructions: str = None, billing_address: str = None, status: str = None, subtotal: float = None, freight: str = None, handling: str = None, tax: float = None, total_cost: float = None, cost_center: str = None, contract: str = None, requested_by: str = None, items: str = None):
+    """
+    A class for storing Invgate Purchase Order objects in memory.
+    """
+    def __init__(self, order_number: str, id: int = None, vendor: InvgateVendor = None, purchase_order_type: str = None, creation_date: str = None, expected_delivery_date: str = None, date_delivered: str = None, ship_method: str = None, ship_to: str = None, shipping_address: str = None, ship_instructions: str = None, billing_address: str = None, status: str = None, subtotal: float = None, freight: str = None, handling: str = None, tax: float = None, total_cost: float = None, cost_center: str = None, contract: str = None, requested_by: str = None, items: str = None):
+        """
+        Creates a new InvgatePurchaseOrder object.
+        
+        Arguments:
+            order_number* (str): The purchase order's number.
+            id (int): The unique identifier for each purchase order object.
+            vendor (InvgateVendor): The purchase order's vendor.
+            purchase_order_type (str): The purchase order's type.
+            creation_date (str): The purchase order's creation date.
+            expected_delivery_date (str): The purchase order's expected delivery date.
+            date_delivered (str): The date of the purchase order's delivery.
+            ship_method (str): The purchase order's ship method.
+            ship_to (str): Where the purchase order is to be shipped.
+            shipping_address (str): The purchase order's shipping address.
+            ship_instructions (str): The purchase order's shipping instructions.
+            billing_address (str): Where the purchase order is billed to.
+            status (str): The purchase order's status.
+            subtotal (float): The purchase order's subtotal.
+            freight (str): The purchase order's freight.
+            handling (str): How the purchase order is to be handled.
+            tax (float): The purchase order's tax.
+            total_cost (float): The purchase order's total cost.
+            cost_center (str): The purchase order's cost center.
+            contract (str): The purchase order's contract.
+            requested_by (str): The person that requested the purchase order.
+            self.items (str): The list of items for the purchase order.
+
+        Returns:
+            None:
+        """
         self.id: int = id
         self.order_number: str = order_number
         self.vendor: InvgateVendor = vendor
@@ -25,6 +58,15 @@ class InvgatePurchaseOrder:
         self.items: str = items
 
     def to_string(self) -> str:
+        """
+        Exports the object's properties as a formatted string.
+        
+        Arguments:
+            None:
+
+        Returns:
+            string (str): The object's properties as a formatted string.
+        """
         string = f"ID: {self.id}\n"
         string += f"Order Number: {self.order_number}\n"
 

@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 computer_dump.json
 routes.txt
+.vscode/

@@ -1,7 +1,31 @@
 from classes.invgate.invgate_vendor import InvgateVendor
 from classes.invgate.invgate_purchase_order import InvgatePurchaseOrder
 class InvgateFinance:
-    def __init__(self, id: int, asset: int, acquisition_type: str = None, acquisition_date: str = None, acquisition_price: float = None, actual_price: float = None, residual_value: float = None, depreciation_percentage: str = None, warranty_date: str = None, vendor: InvgateVendor = None, cost_center: str = None, purchase_order: InvgatePurchaseOrder = None, invoice_id: str = None):
+    """
+    A class for storing Invgate Finance objects in memory.
+    """
+    def __init__(self, asset: int, id: int = None, acquisition_type: str = None, acquisition_date: str = None, acquisition_price: float = None, actual_price: float = None, residual_value: float = None, depreciation_percentage: str = None, warranty_date: str = None, vendor: InvgateVendor = None, cost_center: str = None, purchase_order: InvgatePurchaseOrder = None, invoice_id: str = None):
+        """
+        Creates a new InvgateFinance object.
+
+        Arguments:
+            asset* (int): The unique identifier linking to the asset's ID.
+            id (int): The unique identifier for each finance object.
+            acquisition_type (str): How the asset was acquired.
+            acquisition_date (str): The date of the acquisition.
+            acquisition_price (float): The price of the acquisition.
+            actual_price (float): The current price of the asset.
+            residual_value (float): The residual or scrap value of the asset.
+            depreciation_percentage (str): The percentage of value depreciation undergone by the asset.
+            warranty_date (str): The warranty's expiration date.
+            vendor (InvgateVendor): The asset's vendor.
+            cost_center (str): The asset's cost center.
+            purchase_order (InvgatePurchaseOrder): The asset's purchase order.
+            invoice_id (str): The asset's invoice ID.
+
+        Returns:
+            None:
+        """
         self.id: int = id
         self.asset: int = asset
         self.acquisition_type: str = acquisition_type
@@ -17,6 +41,15 @@ class InvgateFinance:
         self.invoice_id: str = invoice_id
 
     def to_string(self) -> str:
+        """
+        Exports the object's properties as a formatted string.
+
+        Arguments:
+            None:
+
+        Returns:
+            string (str): The object's properties as a formatted string.
+        """
         string = f"ID: {self.id}\n"
         string += f"Asset ID: {self.asset}\n"
         string += f"Acquisition Type: {self.acquisition_type}\n"

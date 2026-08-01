@@ -1,6 +1,33 @@
 from classes.invgate.invgate_location import InvgateLocation
 class InvgateUser:
+    """
+    A class for storing Invgate User objects in memory.
+    """
     def __init__(self, id: int, name: str, email: str = None, date_of_birth: str = None, employee_id: str = None, position: str = None, department: str = None, company: str = None, phone: str = None, cellphone: str = None, address: str = None, person_type: str = None, user: str = None, manager: InvgateUser = None, location: InvgateLocation = None, cost_center: str = None):
+        """
+        Creates a new InvgateUser object.
+        
+        Arguments:
+            id* (int): The unique identifier for each user object.
+            name* (str): The user's name.
+            email (str): The user's email.
+            date_of_birth (str): The user's date of birth.
+            employee_id (str): The user's employee ID.
+            position (str): The user's position.
+            department (str): The user's department.
+            company (str): The user's company.
+            phone (str): The user's phone number.
+            cellphone (str): The user's cellphone number.
+            address (str): The user's address.
+            person_type (str): The user's type.
+            user (str): Unused.
+            manager (InvgateUser): The user's manager.
+            location (InvgateLocation): The user's location.
+            cost_center (str): The user's cost center.
+
+        Returns:
+            None:
+        """
         self.id: int = id
         self.name: str = name
         self.email: str = email
@@ -19,6 +46,15 @@ class InvgateUser:
         self.cost_center: str = cost_center
 
     def to_string(self) -> str:
+        """
+        Exports the object's properties as a formatted string.
+        
+        Arguments:
+            None:
+
+        Returns:
+            string (str): The object's properties as a formatted string.
+        """
         string = f"ID: {self.id}\n"
         string += f"Name: {self.name}\n"
         string += f"Email: {self.email}\n"

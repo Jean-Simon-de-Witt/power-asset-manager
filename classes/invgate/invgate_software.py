@@ -1,7 +1,35 @@
 from classes.invgate.invgate_manufacturer import InvgateManufacturer
 
 class InvgateSoftware:
+    """
+    A class for storing Invgate Software objects in memory.
+    """
     def __init__(self, id: int, resource_type: str = None, install_date: str = None, install_path: str = None, uninstall_call: str = None, computer: int = None, version: str = None, internal_version: str = None, edition: str = None, name: str = None, manufacturer: InvgateManufacturer = None, license: str = None, category: str = None, types: str = None, types_key: str = None, tags: list = None, is_metering_enabled: bool = False):
+        """
+        Creates a new InvgateSoftware object.
+        
+        Arguments:
+            id* (int): The unique identifier for each software object.
+            respurce_type (str): The subtype of the installed program.
+            install_date (str): Date when the program was installed.
+            install_path (str): Where the program is installed.
+            uninstall_call (str): Command used to uninstall the program using Windows.
+            computer (int): The unique identifier linking to the asset's ID.
+            version (str): The software's version.
+            internal_version (str): The software's internal version.
+            edition (str): The software's edition.
+            name (str): The software's name.
+            manufacturer (InvgateManufacturer): The software's manufacturer.
+            license (str): The software's license type.
+            category (str): The software's category.
+            types (str): The program's type.
+            types_key (str): The program's type key.
+            tags (list): The program's tags.
+            is_metering_enabled (bool): Whether or not usage metering is enabled.
+
+        Returns:
+            None:
+        """
         self.id: int = id
         self.resource_type: str = resource_type
         self.install_date: str = install_date
@@ -21,6 +49,15 @@ class InvgateSoftware:
         self.is_metering_enabled: bool = is_metering_enabled
 
     def to_string(self) -> str:
+        """
+        Exports the object's properties as a formatted string.
+        
+        Arguments:
+            None:
+
+        Returns:
+            string (str): The object's properties as a formatted string.
+        """
         string = f"ID: {self.id}\n"
         string += f"Resource Type: {self.resource_type}\n"
         string += f"Install Date: {self.install_date}\n"

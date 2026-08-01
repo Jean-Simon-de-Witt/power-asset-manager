@@ -1,5 +1,26 @@
 class InvgateVendor:
+    """
+    A class for storing Invgate Vendor objects in memory.
+    """
     def __init__(self, id: int, company_name: str, legal_name: str = None, status: str = None, country: str = None, address: str = None, email: str = None, billing_currency: str = None, phone: str = None, industry: str = None):
+        """
+        Creates a new InvgateVendor object.
+        
+        Arguments:
+            id* (int): The unique identifier for each vendor object.
+            company_name* (str): The vendor's company name.
+            legal_name (str): The vendor's legal name.
+            status (str): The vendor's status.
+            country (str): The vendor's country.
+            address (str): The vendor's address.
+            email (str): The vendor's email.
+            billing_currency (str): The currency in which the vendor bills.
+            phone (str): The vendor's phone number.
+            industry (str): The industry in which the vendor operates.
+
+        Returns:
+            None:
+        """
         self.id: int = id
         self.company_name: str = company_name
         self.legal_name: str = legal_name
@@ -12,6 +33,15 @@ class InvgateVendor:
         self.industry: str = industry
 
     def to_string(self) -> str:
+        """
+        Exports the object's properties as a formatted string.
+        
+        Arguments:
+            None:
+        
+        Returns:
+            string (str): The object's properties as a formatted string.
+        """
         string = f"ID: {self.id}\n"
         string += f"Company Name: {self.company_name}\n"
         string += f"Legal Name: {self.legal_name}\n"
