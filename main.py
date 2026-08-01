@@ -20,5 +20,8 @@ if not all([DOMAIN, CLIENT_ID, CLIENT_SECRET]):
 invgate = InvgateConnection(DOMAIN, CLIENT_ID, CLIENT_SECRET)
 
 if invgate.access_token:
-    print(invgate.get_software(1565).to_string())
+    os_updates = invgate.get_operating_system_updates_for_computer(934).get("operating_system_updates")
+
+    for os_update in os_updates:
+        print(os_update.to_string())
         

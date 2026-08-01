@@ -64,3 +64,9 @@ class InvgateRoutes:
 
     def softwares():
         return "/public-api/v2/installed-software/"
+
+    def operating_system_update(id):
+        return f"/public-api/v2/os-updates/{id}/"
+
+    def operating_system_updates():
+        return "/public-api/v2/os-updates/"

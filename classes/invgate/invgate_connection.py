@@ -12,6 +12,7 @@ from classes.invgate.invgate_health import InvgateHealth
 from classes.invgate.invgate_status import InvgateStatus
 from classes.invgate.invgate_location import InvgateLocation
 from classes.invgate.invgate_software import InvgateSoftware
+from classes.invgate.invgate_operating_system_update import InvgateOperatingSystemUpdate
 
 class InvgateConnection:
     # ==============================================================================================
@@ -235,8 +236,17 @@ class InvgateConnection:
     # Populate Methods: Methods to fetch data from Invgate and instantiate them as Python objects
     # ===========================================================================================
 
-    # Gets a single user from Invgate and returns a InvgateUser object.
     def get_user(self, id) -> InvgateUser:
+        """
+        Gets a single user from Invgate and returns an InvgateUser object.
+
+        Arguments:
+            id: The unique identifier of the user to get from Invgate.
+
+        Returns:
+            InvgateUser: If user is found.
+            None: If user is not found.
+        """
         response = self.get_data(endpoint_path = routes.user(id))
         if response:
             if response["manager"]:
@@ -253,7 +263,18 @@ class InvgateConnection:
         return None
 
     # Gets all users on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateUser objects. If no page is specified, returns data from the first page.
-    def get_users(self, page = None) -> list:
+    def get_users(self, page = None) -> dict:
+        """
+        Gets all users on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateUser objects. If no page is specified, returns data from the first page.
+        Arguments:
+            page: Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
+        
+        Returns:
+            dict[int, str, str, list[InvgateUser]]: If users are found, there is a previous URL, and a next URL.
+            dict[int, str, list[InvgateUser]]: If users are found, there is a previous URL, or a new URL.
+            dict[int, list[InvgateUser]]: If users are found.
+            None: If no users are found.
+        """
         if page:
             response = self.get_data(endpoint_path = routes.users(), page = page)
         else:
@@ -288,6 +309,16 @@ class InvgateConnection:
 
     # Gets a single finance from Invgate and returns an InvgateFinance object.
     def get_finance(self, id) -> InvgateFinance:
+        """
+            Gets a single finance from Invgate and returns an InvgateFinance object.
+        
+            Arguments:
+                id: The unique identifier of the finance to get from Invgate.
+        
+            Returns:
+                InvgateFinance: If finance is found.
+                None: If finance is not found.
+        """        
         response = self.get_data(endpoint_path = routes.financial(id))
         if response:
             if response["supplier"]:
@@ -302,8 +333,18 @@ class InvgateConnection:
             return InvgateFinance(id = response.get("id"), asset = response.get("asset"), acquisition_type = response.get("acquisition_type"), acquisition_date = response.get("acquisition_date"), acquisition_price = response.get("acquisition_price"), actual_price = response.get("actual_price"), residual_value = response.get("residual_value"), depreciation_percentage = response.get("depreciation_percentage"), warranty_date = response.get("warranty_date"), vendor = vendor, cost_center = response.get("cost_center"), purchase_order = purchase_order, invoice_id = response.get("invoice_id"))
         return None
 
-    # Gets all finances on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateFinance objects. If no page is specified, returns data from the first page.
-    def get_finances(self, page = None) -> list:
+    def get_finances(self, page = None) -> dict:
+        """
+        Gets all finances on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateFinance objects. If no page is specified, returns data from the first page.
+        Arguments:
+            page: Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
+        
+        Returns:
+            dict[int, str, str, list[InvgateFinance]]: If finances are found, there is a previous URL, and a next URL.
+            dict[int, str, list[InvgateFinance]]: If finances are found, there is a previous URL, or a new URL.
+            dict[int, list[InvgateFinance]]: If finances are found.
+            None: If no finances are found.
+        """
         if page:
             response = self.get_data(endpoint_path = routes.financials(), page = page)
         else:
@@ -337,15 +378,34 @@ class InvgateConnection:
             print("No results.")
             return None
 
-    # Gets a single vendor from Invgate and returns an InvgateVendor object.
     def get_vendor(self, id) -> InvgateVendor:
+        """
+        Gets a single vendor from Invgate and returns an InvgateVendor object.
+
+        Arguments:
+            id*: The unique identifier of the vendor to get from Invgate.
+
+        Returns:
+            InvgateVendor: If vendor is found.
+            None: If vendor is not found.
+        """        
         response = self.get_data(endpoint_path = routes.vendor(id))
         if response:
             return InvgateVendor(company_name = response.get("company_name"), id = response.get("id"), legal_name = response.get("legal_name"), status = response.get("status"), country = response.get("country"), address = response.get("address"), email = response.get("email"), billing_currency = response.get("billing_currency"), phone = response.get("phone"), industry = response.get("industry"))
         return None
 
-    # Gets all vendors on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateVendor objects. If no page is specified, returns data from the first page.
-    def get_vendors(self, page = None) -> list:
+    def get_vendors(self, page = None) -> dict:
+        """
+        Gets all vendors on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateVendor objects. If no page is specified, returns data from the first page.
+        Arguments:
+            page: Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
+        
+        Returns:
+            dict[int, str, str, list[InvgateVendor]]: If vendors are found, there is a previous URL, and a next URL.
+            dict[int, str, list[InvgateVendor]]: If vendors are found, there is a previous URL, or a new URL.
+            dict[int, list[InvgateVendor]]: If vendors are found.
+            None: If no vendors are found.
+        """
         if page:
             response = self.get_data(endpoint_path = routes.vendors(), page = page)
         else:
@@ -370,15 +430,34 @@ class InvgateConnection:
             print("No results.")
             return None
 
-    # Gets a single tag from Invgate and returns an InvgateTag object
     def get_tag(self, id) -> InvgateTag:
+        """
+        Gets a single tag from Invgate and returns an InvgateTag object.
+
+        Arguments:
+            id: The unique identifier of the tag to get from Invgate.
+
+        Returns:
+            InvgateTag: If tag is found.
+            None: If tag is not found.
+        """
         response = self.get_data(endpoint_path = routes.tag(id))
         if response:
             return InvgateTag(id = response.get("id"), name = response.get("name"), color = response.get("color"), description = response.get("description"), smart_tag = response.get("smart_tag"), locked = response.get("locked"))
         return None
 
-    # Gets all tags on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateTag objects. If no page is specified, returns data from the first page.
-    def get_tags(self, page = None) -> list:
+    def get_tags(self, page = None) -> dict:
+        """
+        Gets all tags on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateTag objects. If no page is specified, returns data from the first page.
+        Arguments:
+            page: Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
+        
+        Returns:
+            dict[int, str, str, list[InvgateTag]]: If tags are found, there is a previous URL, and a next URL.
+            dict[int, str, list[InvgateTag]]: If tags are found, there is a previous URL, or a new URL.
+            dict[int, list[InvgateTag]]: If tags are found.
+            None: If no tags are found.
+        """
         if page:
             response = self.get_data(endpoint_path = routes.tags(), page = page)
         else:
@@ -403,8 +482,17 @@ class InvgateConnection:
             print("No results.")
             return None
 
-    # Gets a single purchase order from Invgate and returns an InvgatePurchaseOrder object
     def get_purchase_order(self, id) -> InvgatePurchaseOrder:
+        """
+        Gets a single purchase order from Invgate and returns an InvgatePurchaseOrder object.
+
+        Arguments:
+            id: The unique identifier of the purchase to get from Invgate.
+
+        Returns:
+            InvgatePurchaseOrder: If purchase order is found.
+            None: If purchase order is not found.
+        """
         response = self.get_data(endpoint_path = routes.purchase_order(id))
         if response:
             if response["vendor"]:
@@ -414,8 +502,18 @@ class InvgateConnection:
             return InvgatePurchaseOrder(id = response.get("id"), order_number = response.get("order_number"), vendor = vendor, purchase_order_type = response.get("purchase_order_type"), creation_date = response.get("creation_date"), expected_delivery_date = response.get("expected_delivery_date"), date_delivered = response.get("date_delivered"), ship_method = response.get("ship_method"), ship_to = response.get("ship_to"), shipping_address = response.get("shipping_address"), ship_instructions = response.get("ship_instructions"), billing_address = response.get("billing_address"), status = response.get("status"), subtotal = response.get("subtotal"), freight = response.get("freight"), handling = response.get("handling"), tax = response.get("tax"), total_cost = response.get("total_cost"), cost_center = response.get("cost_center"), contract = response.get("contract"), requested_by = response.get("requested_by"), items = response.get("items"))
         return None
 
-    # Gets all purchase orders on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgatePurchaseOrder objects. If no page is specified, returns data from the first page.
-    def get_purchase_orders(self, page = None) -> list:
+    def get_purchase_orders(self, page = None) -> dict:
+        """
+        Gets all purchase orders on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgatePurchaseOrder objects. If no page is specified, returns data from the first page.
+        Arguments:
+            page: Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
+        
+        Returns:
+            dict[int, str, str, list[InvgatePurchaseOrder]]: If purchase orders are found, there is a previous URL, and a next URL.
+            dict[int, str, list[InvgatePurchaseOrder]]: If purchase orders are found, there is a previous URL, or a new URL.
+            dict[int, list[InvgatePurchaseOrder]]: If purchase orders are found.
+            None: If no purchase orders are found.
+        """
         if page:
             response = self.get_data(endpoint_path = routes.purchase_orders(), page = page)
         else:
@@ -444,15 +542,34 @@ class InvgateConnection:
             print("No results.")
             return None
 
-    # Gets a single manufacturer from Invgate and returns an InvgateManufacturer object
     def get_manufacturer(self, id) -> InvgateManufacturer:
+        """
+        Gets a single manufacturer from Invgate and returns an InvgateManufacturer object.
+
+        Arguments:
+            id: The unique identifier of the manufacturer to get from Invgate.
+
+        Returns:
+            InvgateManufacturer: If manufacturer is found.
+            None: If manufacturer is not found.
+        """
         response = self.get_data(endpoint_path = routes.manufacturer(id))
         if response:
             return InvgateManufacturer(id = response.get("id"), name = response.get("name"))
         return None
 
-    # Gets all manufacturers on the specified page from Invgate and returns the counts, previous page, next page, and a list of InvgateManufacturer objects. If no page is specified, returns data from the first page.
-    def get_manufacturers(self, page = None) -> list:
+    def get_manufacturers(self, page = None) -> dict:
+        """
+        Gets all manufacturers on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateManufacturer objects. If no page is specified, returns data from the first page.
+        Arguments:
+            page: Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
+        
+        Returns:
+            dict[int, str, str, list[InvgateManufacturer]]: If manufacturers are found, there is a previous URL, and a next URL.
+            dict[int, str, list[InvgateManufacturer]]: If manufacturers are found, there is a previous URL, or a new URL.
+            dict[int, list[InvgateManufacturer]]: If manufacturers are found.
+            None: If no manufacturers are found.
+        """
         if page:
             response = self.get_data(endpoint_path = routes.manufacturers(), page = page)
         else:
@@ -478,12 +595,33 @@ class InvgateConnection:
             return None
 
     def get_health(self, computer_id) -> InvgateHealth:
+        """
+        Gets a single health from Invgate and returns an InvgateHealth object.
+
+        Arguments:
+            computer_id: The unique identifier of the asset to which the health belongs.
+
+        Returns:
+            InvgateHealth: If health is found.
+            None: If health is not found.
+        """
         response = self.get_data(endpoint_path = routes.health(computer_id))
         if response:
             return InvgateHealth(computer = response.get("computer"), updated_at = response.get("updated_at"), health_rule = response.get("health_rule"), status = response.get("status"))
         return None
 
-    def get_healths(self, page = None) -> list:
+    def get_healths(self, page = None) -> dict:
+        """
+        Gets all health on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateHealth objects. If no page is specified, returns data from the first page.
+        Arguments:
+            page: Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
+        
+        Returns:
+            dict[int, str, str, list[InvgateHealth]]: If healths are found, there is a previous URL, and a next URL.
+            dict[int, str, list[InvgateHealth]]: If healths are found, there is a previous URL, or a new URL.
+            dict[int, list[InvgateHealth]]: If healths are found.
+            None: If no healths are found.
+        """
         if page:
             response = self.get_data(endpoint_path = routes.healths(), page = page)
         else:
@@ -508,13 +646,34 @@ class InvgateConnection:
             return None
 
     def get_status(self, id) -> InvgateStatus:
+        """
+        Gets a single status from Invgate and returns an InvgateStatus object.
+
+        Arguments:
+            id: The unique identifier of the status to get from Invgate.
+
+        Returns:
+            InvgateStatus: If status is found.
+            None: If status is not found.
+        """
         response = self.get_data(endpoint_path = routes.status(), v1 = True, query = f"ids={id}")
         if response:
             data = response.get("data")[0]
             return InvgateStatus(id = data.get("id"), name = data.get("attributes").get("name"), description = data.get("attributes").get("description"), behavior = data.get("attributes").get("behavior"), is_default = data.get("attributes").get("is_default"))
         return None
 
-    def get_statuses(self, page = None) -> list:
+    def get_statuses(self, page = None) -> dict:
+        """
+        Gets all statuses on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateStatus objects. If no page is specified, returns data from the first page.
+        Arguments:
+            page: Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
+        
+        Returns:
+            dict[int, str, str, list[InvgateStatus]]: If statuses are found, there is a previous URL, and a next URL.
+            dict[int, str, list[InvgateStatus]]: If statuses are found, there is a previous URL, or a new URL.
+            dict[int, list[InvgateStatus]]: If statuses are found.
+            None: If no statuses are found.
+        """
         if page:
             response = self.get_data(endpoint_path = routes.status(), page = page, v1 = True)
         else:
@@ -537,13 +696,34 @@ class InvgateConnection:
             return None
 
     def get_location(self, id) -> InvgateLocation:
+        """
+        Gets a single location from Invgate and returns an InvgateLocation object.
+
+        Arguments:
+            id: The unique identifier of the location to get from Invgate.
+
+        Returns:
+            InvgateLocation: If location is found.
+            None: If location is not found.
+        """
         response = self.get_data(endpoint_path = routes.location(id), v1 = True)
         if response:
             data = response.get("data")[0]
             return InvgateLocation(id = data.get("id"), name = data.get("attributes").get("name"), full_path = data.get("attributes").get("full_path"), description = data.get("attributes").get("description"))
         return None
 
-    def get_locations(self, page = None) -> list:
+    def get_locations(self, page = None) -> dict:
+        """
+        Gets all locations on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateLocation objects. If no page is specified, returns data from the first page.
+        Arguments:
+            page: Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
+        
+        Returns:
+            dict[int, str, str, list[InvgateLocation]]: If locations are found, there is a previous URL, and a next URL.
+            dict[int, str, list[InvgateLocation]]: If locations are found, there is a previous URL, or a new URL.
+            dict[int, list[InvgateLocation]]: If locations are found.
+            None: If no locations are found.
+        """
         if page:
             response = self.get_data(endpoint_path = routes.locations(), page = page, v1 = True)
         else:
@@ -568,6 +748,16 @@ class InvgateConnection:
             return None
 
     def get_software(self, id) -> InvgateSoftware:
+        """
+        Gets a single software from Invgate and returns an InvgateSoftware object.
+
+        Arguments:
+            id: The unique identifier of the software to get from Invgate.
+
+        Returns:
+            InvgateSoftware: If software is found.
+            None: If software is not found.
+        """
         response = self.get_data(endpoint_path = routes.software(id))
         if response:
             if response["version"]["program"]["manufacturer"]:
@@ -579,7 +769,165 @@ class InvgateConnection:
         else:
             return None
 
+    def get_softwares(self, page = None) -> dict:
+        """
+        Gets all software on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateSoftware objects. If no page is specified, returns data from the first page.
+        Arguments:
+            page: Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
+        
+        Returns:
+            dict[int, str, str, list[InvgateSoftware]]: If softwares are found, there is a previous URL, and a next URL.
+            dict[int, str, list[InvgateSoftware]]: If softwares are found, there is a previous URL, or a new URL.
+            dict[int, list[InvgateSoftware]]: If softwares are found.
+            None: If no softwares are found.
+        """
+        if page:
+            response = self.get_data(endpoint_path = routes.softwares(), page = page)
+        else:
+            response = self.get_data(endpoint_path = routes.softwares())
+
+        if response and response["results"]:
+            results = {"count": response.get("count")}
+
+            if response["next"]:
+                results["next"] = response.get("next")
+
+            if response["previous"]:
+                results["previous"] = response.get["previous"]
+
+            softwares = response.get("results")
+            results["softwares"] = []
+
+            for s in softwares:
+                if s["version"]["program"]["manufacturer"]:
+                    manufacturer = InvgateManufacturer(id = s.get("version").get("program").get("manufacturer").get("id"), name = s.get("version").get("program").get("manufacturer").get("name"))
+                else:
+                    manufacturer = None
+                results["softwares"].append(InvgateSoftware(id = s.get("id"), resource_type = s.get("resource_type"), install_date = s.get("install_date"), install_path = s.get("install_path"), uninstall_call = s.get("uninstall_call"), computer = s.get("computer"), version = s.get("version").get("version"), internal_version = s.get("version").get("internal_version"), edition = s.get("version").get("edition"), name = s.get("version").get("program").get("name"), manufacturer = manufacturer, license = s.get("version").get("program").get("license"), category = s.get("version").get("program").get("category"), types = s.get("version").get("program").get("types"), types_key = s.get("version").get("program").get("types_key"), tags = s.get("version").get("program").get("tags"), is_metering_enabled = s.get("version").get("program").get("is_metering_enabled")))
+            return results
+        else:
+            print("No results.")
+            return None
+
+    def get_operating_system_update(self, id) -> InvgateOperatingSystemUpdate:
+        """
+        Gets a single operating system update from Invgate and returns an InvgateOperatingSystemUpdate object.
+
+        Arguments:
+            id: The unique identifier of the operating system update to get from Invgate.
+
+        Returns:
+            InvgateOperatingSystemUpdate: If operating system update is found.
+            None: If operating system update is not found.
+        """
+        response = self.get_data(endpoint_path = routes.operating_system_update(id))
+        if response:
+            return InvgateOperatingSystemUpdate(id = response.get("id"), install_date = response.get("install_date"), status = response.get("status"), computer = response.get("computer"), version = response.get("os_update_version").get("version"), release_date = response.get("os_update_version").get("release_date"), short_name = response.get("os_update_version").get("os_update").get("short_name"), name = response.get("os_update_version").get("os_update").get("name"), update_type = response.get("os_update_version").get("os_update").get("update_type"), os_type = response.get("os_update_version").get("os_update").get("os_type"), severity = response.get("os_update_version").get("os_update").get("severity"), support_url = response.get("os_update_version").get("os_update").get("support_url"))
+        else:
+            return None
+
+    def get_operating_system_updates(self, page = None) -> dict:
+        """
+        Gets all operating system updates on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateOperatingSystemUpdate objects. If no page is specified, returns data from the first page.
+        Arguments:
+            page: Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
+        
+        Returns:
+            dict[int, str, str, list[InvgateOperatingSystemUpdate]]: If operating system updates are found, there is a previous URL, and a next URL.
+            dict[int, str, list[InvgateOperatingSystemUpdate]]: If operating system updates are found, there is a previous URL, or a new URL.
+            dict[int, list[InvgateOperatingSystemUpdate]]: If operating system updates are found.
+            None: If no operating system updates are found.
+        """
+        if page:
+            response = self.get_data(endpoint_path = routes.operating_system_updates(), page = page)
+        else:
+            response = self.get_data(endpoint_path = routes.operating_system_updates())
+
+        if response and response["results"]:
+            results = {"count": response.get("count")}
+
+            if response["next"]:
+                results["next"] = response.get("next")
+
+            if response["previous"]:
+                results["previous"] = response.get("previous")
+
+            operating_system_updates = response.get("results")
+            results["operating_system_updates"] = []
+
+            for os_update in operating_system_updates:
+                results["operating_system_updates"].append(InvgateOperatingSystemUpdate(id = os_update.get("id"), install_date = os_update.get("install_date"), status = os_update.get("status"), computer = os_update.get("computer"), version = os_update.get("os_update_version").get("version"), release_date = os_update.get("os_update_version").get("release_date"), short_name = os_update.get("os_update_version").get("os_update").get("short_name"), name = os_update.get("os_update_version").get("os_update").get("name"), update_type = os_update.get("os_update_version").get("os_update").get("update_type"), os_type = os_update.get("os_update_version").get("os_update").get("os_type"), severity = os_update.get("os_update_version").get("os_update").get("severity"), support_url = os_update.get("os_update_version").get("os_update").get("support_url")))
+            return results
+        else:
+            print("No results.")
+            return None
+
+    def get_operating_system_updates_for_computer(self, computer_id) -> dict:
+        """
+        Gets all operating system updates that belong to the specified asset id and returns them as InvgateOperatingSystemUpdate objects
+        Arguments:
+            computer_id* (int): The unique identifier of the asset that the operating system updates belong to. 
+        Returns:
+            dict[int, list[InvgateOperatingSystemUpdate]]: If operating system updates are found.
+            None: If no operating system updates are found.
+        """
+        response = self.get_data(endpoint_path = routes.operating_system_updates(), query = f"asset_id={computer_id}")
+        if response and response["results"]:
+            results = {"count": response.get("count")}
+            results["operating_system_updates"] = []
+
+            while True:
+                operating_system_updates = response.get("results")
+                for os_update in operating_system_updates:
+                    results["operating_system_updates"].append(InvgateOperatingSystemUpdate(id = os_update.get("id"), install_date = os_update.get("install_date"), status = os_update.get("status"), computer = os_update.get("computer"), version = os_update.get("os_update_version").get("version"), release_date = os_update.get("os_update_version").get("release_date"), short_name = os_update.get("os_update_version").get("os_update").get("short_name"), name = os_update.get("os_update_version").get("os_update").get("name"), update_type = os_update.get("os_update_version").get("os_update").get("update_type"), os_type = os_update.get("os_update_version").get("os_update").get("os_type"), severity = os_update.get("os_update_version").get("os_update").get("severity"), support_url = os_update.get("os_update_version").get("os_update").get("support_url")))
+                if response["next"]:
+                    response = self.get_data(full_path = response.get("next"))
+                else:
+                    break
+            return results
+
+    def get_software_for_computer(self, computer_id) -> list:
+        """
+        Gets software installations that belong to the specified asset id and returns them as InvgateSoftware objects
+        Arguments:
+            computer_id* (int): The unique identifier of the asset that the software installations belong to. 
+        Returns:
+            dict[int, list[InvgateSoftware]]: If software installations are found.
+            None: If no software installations are found.
+        """
+        response = self.get_data(endpoint_path = routes.softwares(), query = f"asset_id={computer_id}")
+        if response and response["results"]:
+            results = {"count": response.get("count")}
+            results["softwares"] =  []
+            while True:
+                softwares = response.get("results")
+                for s in softwares:
+                    if s["version"]["program"]["manufacturer"]:
+                        manufacturer = InvgateManufacturer(id = s.get("version").get("program").get("manufacturer").get("id"), name = s.get("version").get("program").get("manufacturer").get("name"))
+                    else:
+                        manufacturer = None
+
+                    results["softwares"].append(InvgateSoftware(id = s.get("id"), resource_type = s.get("resource_type"), install_date = s.get("install_date"), uninstall_call = s.get("uninstall_call"), computer = s.get("computer"), version = s.get("version").get("version"), internal_version = s.get("version").get("internal_version"), edition = s.get("version").get("edition"), name = s.get("version").get("program").get("name"), manufacturer = manufacturer, license = s.get("version").get("program").get("license"), category = s.get("version").get("program").get("cateogry"), types = s.get("version").get("program").get("types"), types_key = s.get("version").get("program").get("types_key"), tags = s.get("version").get("program").get("tags"), is_metering_enabled = s.get("version").get("program").get("is_metering_enabled")))
+
+                if response["next"]:
+                    response = self.get_data(full_path = response.get("next"))
+                else:
+                    break
+            return results
+        else:
+            print("No results.")
+            return None
+
     def get_purchase_order_by_order_id(self, order_id: str) -> InvgatePurchaseOrder:
+        """
+        Gets a purchase order from Invgate by filtering by the purchase order's name.
+        Arguments:
+            order_id: The purchase order's name.
+        
+        Returns:
+            InvgatePurchaseOrder: If purchase order is found.
+            None: If purchase order is not found.
+        """
         response = self.get_data(endpoint_path = routes.purchase_orders())
         po = None
 
