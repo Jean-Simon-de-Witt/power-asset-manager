@@ -62,6 +62,17 @@ class InvgateAsset:
         self.format: str = format
 
     def populate_collections(self, health: InvgateHealth = None, software: list[InvgateSoftware] = None, operating_system_updates: list[InvgateOperatingSystemUpdate] = None):
+        """
+        Populates the asset's collections with the provided data.
+        
+        Arguments:
+            health (InvgateHealth): The asset's health.
+            software (list[InvgateSoftware]): The asset's installed software.
+            operating_system_updates (list[InvgateOperatingSystemUpdate]): The asset's operating system updates.
+
+        Returns:
+            None:
+        """
         if health:
             self.health: InvgateHealth = health
 
@@ -173,3 +184,77 @@ class InvgateAsset:
         else:
             string += "Operating System Updates: None\n"
         return string  
+
+    def to_json(self, include_id: bool = False) -> dict:
+        """
+        Exports the object's properties as a JSON object.
+        
+        Arguments:
+            None:
+        
+        Returns:
+            json (dict): The object's properties as a JSON object.
+        """
+        json = {}
+
+        if self.id and include_id:
+            json["id"] = self.id
+
+        if self.name:
+            json["name"] = self.name
+
+        if self.serial:
+            json["serial"] = self.serial
+
+        if self.inventory_id:
+            json["inventory_id"] = self.inventory_id
+
+        if self.asset_physical_tag:
+            json["asset_physical_tag"] = self.asset_physical_tag
+
+        if self.created_at:
+            json["created_at"] = self.created_at
+
+        if self.reported_at:
+            json["reported_at"] = self.reported_at
+
+        if self.updated_at:
+            json["updated_at"] = self.updated_at
+
+        if self.status:
+            json["status"] = self.status.id
+
+        if self.location:
+            json["location"] = self.location.id
+
+        if self.owner:
+            json["owner"] = self.owner.id
+
+        if self.finance:
+            json["finance"] = self.finance.id
+
+        if self.manufacturer:
+            json["manufacturer"] = self.manufacturer.name
+
+        if self.model:
+            json["model"] = self.model
+
+        if self.commercial_model:
+            json["commercial_model"] = self.commercial_model
+
+        if self.asset_type:
+            json["asset_type"] = self.asset_type
+
+        if self.default_ip:
+            json["default_ip"] = self.default_ip
+
+        if self.mac_address:
+            json["mac_address"] = self.mac_address
+
+        if self.asset_type_code:
+            json["asset_type_code"] = self.asset_type_code
+
+        if self.format:
+            json["format"] = self.format
+
+        return json

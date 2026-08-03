@@ -150,44 +150,7 @@ class InvgateConnection:
 
             if hasattr(e, 'response') and e.response is not None:
                 print(f"Server response: {e.response.text}")
-                return None
-
-    # ==============================================================================================
-    # Put Data function: Updates existing records in the system using the authenticated session
-    # ==============================================================================================       
-    def put_data(self, endpoint_path, payload):
-        # End if not authenticated
-        if not self.access_token:
-            print("Unable to make request: Not authenticated")
-            return None
-        
-        # Ensure endpoint starts with a slash
-        if not endpoint_path.startswith('/'):
-            endpoint_path = '/' + endpoint_path
-
-        # Ensure endpoint ends with a slash to prevent 502 Bad Gateway redirect loops
-        if not endpoint_path.endswith('/'):
-            endpoint_path = endpoint_path + '/'
-
-        full_url = f"{self.domain}{endpoint_path}"
-
-        try:
-            # Force the strict JSON:API headers required by InvGate
-            headers = {
-                "Content-Type": "application/vnd.api+json",
-                "Accept": "application/vnd.api+json"
-            }
-            
-            # Use data=json.dumps() so the requests library doesn't overwrite the Content-Type
-            response = self.session.put(full_url, data=json.dumps(payload), headers=headers)
-            response.raise_for_status()
-            return response.json()
-            
-        except requests.exceptions.RequestException as e:
-            print(f"PUT request failed for {endpoint_path}: {e}")
-            if hasattr(e, 'response') and e.response is not None:
-                print(f"Server response: {e.response.text}")
-                return None
+                return None   
     
     def patch_data(self, endpoint_path, payload):
         if not self.access_token:
@@ -201,8 +164,8 @@ class InvgateConnection:
 
         try:
             headers = {
-            "Content-Type": "application/vnd.api+json",
-            "Accept": "application/vnd.api+json"
+            "Content-Type": "application/json",
+            "Accept": "application/json"
             }
             response = self.session.patch(full_url, data=json.dumps(payload), headers=headers)
             response.raise_for_status()
@@ -545,18 +508,24 @@ class InvgateConnection:
             print("No results.")
             return None
 
-    def get_manufacturer(self, id: int) -> InvgateManufacturer:
+    def get_manufacturer(self, id: int = None, name: str = None) -> InvgateManufacturer:
         """
         Gets a single manufacturer from Invgate and returns an InvgateManufacturer object.
 
         Arguments:
-            id* (int): The unique identifier of the manufacturer to get from Invgate.
+            id (int): The unique identifier of the manufacturer to get from Invgate.
+            name (str): The name of the manufacturer to get from Invgate.
 
         Returns:
             InvgateManufacturer: If manufacturer is found.
             None: If manufacturer is not found.
         """
-        response = self.get_data(endpoint_path = routes.manufacturer(id))
+        if id and name:
+            response = self.get_data(endpoint_path = routes.manufacturer(id))
+        elif id:
+            response = self.get_data(endpoint_path = routes.manufacturer(id))
+        elif name:
+            response = self.get_data(endpoint_path = routes.manufacturers(), query = f"name={name}").get("results")[0]
         if response:
             return InvgateManufacturer(id = response.get("id"), name = response.get("name"))
         return None
@@ -812,18 +781,25 @@ class InvgateConnection:
             print("No results.")
             return None
 
-    def get_asset(self, id: int) -> InvgateAsset:
+    def get_asset(self, id: int = None, name: str = None) -> InvgateAsset:
         """
         Gets a single asset from Invgate and returns an InvgateAsset object.
         
         Arguments:
-            id* (int): The unique identifier of the asset to get from Invgate.
+            id (int): The unique identifier of the asset to get from Invgate.
+            name (str): The name of the asset to get from Invgate.
 
         Returns:
             InvgateAsset: If asset is found.
             None: If asset is not found.
         """
-        response = self.get_data(endpoint_path = routes.asset(id))
+        if id and name:
+            response = self.get_data(endpoint_path = routes.asset(id))
+        elif id:
+            response = self.get_data(endpoint_path = routes.asset(id))
+        elif name:
+            response = self.get_data(endpoint_path = routes.assets(), query = f"name={name}").get("results")[0]
+
 
         if response:
             if response["status"]:
@@ -847,7 +823,7 @@ class InvgateConnection:
                 finance = None
 
             if response["manufacturer"]:
-                manufacturer = self.get_manufacturer_by_name(response.get("manufacturer"))
+                manufacturer = self.get_manufacturer(name = response.get("manufacturer"))
             else:
                 manufacturer = None
 
@@ -907,7 +883,7 @@ class InvgateConnection:
                     finance = None
 
                 if a["manufacturer"]:
-                    manufacturer = self.get_manufacturer_by_name(a.get("manufacturer"))
+                    manufacturer = self.get_manufacturer(name = a.get("manufacturer"))
                 else:
                     manufacturer = None
 
@@ -1054,37 +1030,24 @@ class InvgateConnection:
         else:
             return None
 
-    def get_manufacturer_by_name(self, name: str) -> InvgateManufacturer:
-        """
-        Gets a manufacturer from Invgate by filtering by the manufacturer's name.
-        
-        Arguments:
-            name* (str): The manufacturer's name.
-
-        Returns:
-            InvgateManufacturer: If manufacturer is found.
-            None: If manufacturer is not found.
-        """
-        response = self.get_data(endpoint_path = routes.manufacturers(), query = f"name={name}")
-
-        if response["results"]:
-            manufacturer = response.get("results")[0]
-            return InvgateManufacturer(id = manufacturer.get("id"), name = manufacturer.get("name"))
-        else:
-            return None
-
-    def get_asset_with_collections(self, id: int) -> InvgateAsset:
+    def get_asset_with_collections(self, id: int = None, name: str = None) -> InvgateAsset:
         """
         Gets a single asset from Invgate along with its collections and returns an InvgateAsset object.
         
         Arguments:
-            id* (int): The unique identifier of the asset to get from Invgate.
+            id (int): The unique identifier of the asset to get from Invgate.
+            name (str): The name of the asset to get from Invgate.
 
         Returns:
             InvgateAsset: If asset is found.
             None: If asset is not found.
         """
-        response = self.get_data(endpoint_path = routes.asset(id))
+        if id and name:
+            response = self.get_data(endpoint_path = routes.asset(id))
+        elif id:
+            response = self.get_data(endpoint_path = routes.asset(id))
+        elif name:
+            response = self.get_data(endpoint_path = routes.assets(), query = f"name={name}").get("results")[0]
 
         if response:
             if response["status"]:
@@ -1108,12 +1071,21 @@ class InvgateConnection:
                 finance = None
 
             if response["manufacturer"]:
-                manufacturer = self.get_manufacturer_by_name(response.get("manufacturer"))
+                manufacturer = self.get_manufacturer(name = response.get("manufacturer"))
             else:
                 manufacturer = None
 
             asset = InvgateAsset(name = response.get("name"), id = response.get("id"), serial = response.get("serial"), inventory_id = response.get("inventory_id"), asset_physical_tag = response.get("asset_physical_tag"), created_at = response.get("created_at"), reported_at = response.get("reported_at"), updated_at = response.get("updated_at"), status = status, location = location, owner = owner, finance = finance, manufacturer = manufacturer, model = response.get("model"), commercial_model = response.get("commercial_model"), asset_type = response.get("asset_type"), default_ip = response.get("default_ip"), mac_address = response.get("mac_address"), asset_type_code = response.get("asset_type_code"), format = response.get("format"))
-            asset.populate_collections(health = self.get_health(asset.id), software = self.get_software_for_computer(asset.id).get("softwares"), operating_system_updates = self.get_operating_system_updates_for_computer(asset.id).get("operating_system_updates"))
+            health = self.get_health(asset.id)
+            software = self.get_software_for_computer(asset.id)
+            operating_system_updates = self.get_operating_system_updates_for_computer(asset.id)
+
+            if software and operating_system_updates:
+                asset.populate_collections(health = health, software = software.get("softwares"), operating_system_updates = operating_system_updates.get("operating_system_updates"))
+            elif software:
+                asset.populate_collections(health = health, software = software.get("softwares"))
+            elif operating_system_updates:
+                asset.populate_collections(health = health, operating_system_updates = operating_system_updates.get("operating_system_updates"))
             return asset
         else:
             return None
