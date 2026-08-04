@@ -33,5 +33,5 @@ class InvgateLocation:
         string = f"ID: {self.id}\n"
         string += f"Name: {self.name}\n"
         string += f"Full Path: {self.full_path}\n"
-        string =+ f"Description: {self.description}\n"
+        string += f"Description: {self.description}\n"
         return string

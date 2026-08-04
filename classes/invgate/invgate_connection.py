@@ -137,8 +137,8 @@ class InvgateConnection:
 
         try:
             headers = {
-                "Content-Type": "application/vnd.api+json",
-                "Accept": "application/vnd.api+json"
+                "Content-Type": "application/json",
+                "Accept": "application/json"
             }
             # Requests library automatically formats data correctly for JSON payload when using json=payload
             response = self.session.post(full_url, headers=headers, data=json.dumps(payload))
@@ -202,7 +202,7 @@ class InvgateConnection:
     # Populate Methods: Methods to fetch data from Invgate and instantiate them as Python objects
     # ===========================================================================================
 
-    def get_user(self, id: int) -> InvgateUser:
+    def get_user(self, id: int = None, name: str = None) -> InvgateUser:
         """
         Gets a single user from Invgate and returns an InvgateUser object.
 
@@ -213,7 +213,12 @@ class InvgateConnection:
             InvgateUser: If user is found.
             None: If user is not found.
         """
-        response = self.get_data(endpoint_path = routes.user(id))
+        if id and name:
+            response = self.get_data(endpoint_path = routes.user(id))
+        elif id:
+            response = self.get_data(endpoint_path = routes.user(id))
+        elif name:
+            response = self.get_data(endpoint_path = routes.users(), query = f"name={name}").get("results")[0]
         if response:
             if response["manager"]:
                 manager = self.get_user(response.get("manager"))
@@ -1088,4 +1093,154 @@ class InvgateConnection:
                 asset.populate_collections(health = health, operating_system_updates = operating_system_updates.get("operating_system_updates"))
             return asset
         else:
+            return None
+
+    # =============================================================================================
+    # Create Methods: Methods to export data from Python objects and create new objects in Invgate.
+    # =============================================================================================
+
+    def create_asset(self, asset: InvgateAsset) -> InvgateAsset:
+        """
+        Creates a new asset in Invgate using the data from an InvgateAsset object.
+        
+        Arguments:
+            asset* (InvgateAsset): The InvgateAsset object to create in Invgate.
+
+        Returns:
+            InvgateAsset: If asset is created successfully.
+            None: If asset is not created successfully.
+        """
+        response = self.post_data(endpoint_path = routes.assets(), payload = asset.to_json())
+
+        if response["id"]:
+            if response["status"]:
+                status = self.get_status(id = response.get("status"))
+            else:
+                status = None
+
+            if response["location"]:
+                location = self.get_location(id = response.get("location"))
+            else:
+                location = None
+
+            if response["owner"]:
+                owner = self.get_user(id = response.get("owner"))
+            else:
+                owner = None
+
+            if response["finance"]:
+                finance = self.get_finance(id = response.get("finance"))
+            else:
+                finance = None
+
+            if response["manufacturer"]:
+                manufacturer = self.get_manufacturer(name = response.get("manufacturer"))
+            else:
+                manufacturer = None
+
+            return InvgateAsset(name = response.get("name"), id = response.get("id"), serial = response.get("serial"), inventory_id = response.get("inventory_id"), asset_physical_tag = response.get("asset_physical_tag"), created_at = response.get("created_at"), reported_at = response.get("reported_at"), updated_at = response.get("updated_at"), status = status, location = location, owner = owner, finance = finance, manufacturer = manufacturer, model = response.get("model"), commercial_model = response.get("commercial_model"), asset_type = response.get("asset_type"), default_ip = response.get("default_ip"), mac_address = response.get("mac_address"), asset_type_code = response.get("asset_type_code"), format = response.get("format"))
+
+    def create_user(self, user: InvgateUser) -> InvgateUser:
+        """
+        Creates a new user in Invgate using the data from an InvgateUser object.
+        
+        Arguments:
+            user* (InvgateUser): The InvgateUser object to create in Invgate.
+
+        Returns:
+            InvgateUser: If user is created successfully.
+            None: If user is not created successfully.
+        """
+        response = self.post_data(endpoint_path = routes.users(), payload = user.to_json())
+
+        if response["id"]:
+            if response["manager"]:
+                manager = self.get_user(id = response.get("manager"))
+            else:
+                manager = None
+
+            if response["location"]:
+                location = self.get_location(id = response.get("location"))
+            else:
+                location = None
+
+            return InvgateUser(id = response.get("id"), name = response.get("name"), email = response.get("email"), date_of_birth = response.get("date_of_birth"), employee_id = response.get("employee_id"), position = response.get("position"), department = response.get("department"), company = response.get("company"), phone = response.get("phone"), cellphone = response.get("cellphone"), address = response.get("address"), person_type = response.get("person_type"), user = response.get("user"), manager = manager, location = location, cost_center = response.get("cost_center"))
+        print(response)
+        return None
+
+    # ==================================================================================================
+    # Update Methods: Methods to export data from Python objects and update existing objects in Invgate.
+    # ==================================================================================================
+
+    def update_asset(self, asset: InvgateAsset) -> InvgateAsset:
+        """
+        Updates an existing asset in Invgate using the data from an InvgateAsset object.
+        
+        Arguments:
+            asset* (InvgateAsset): The InvgateAsset object to update in Invgate.
+            
+        Returns:
+            InvgateAsset: If asset is updated successfully.
+            None: If asset is not updated successfully.    
+        """
+        response = self.patch_data(endpoint_path = routes.asset(asset.id), payload = asset.to_json())
+
+        if response["id"]:
+            if response["status"]:
+                status = self.get_status(id = response.get("status"))
+            else:
+                status = None
+
+            if response["location"]:
+                location = self.get_location(id = response.get("location"))
+            else:
+                location = None
+
+            if response["owner"]:
+                owner = self.get_user(id = response.get("owner"))
+            else:
+                owner = None
+
+            if response["finance"]:
+                finance = self.get_finance(id = response.get("finance"))
+            else:
+                finance = None
+
+            if response["manufacturer"]:
+                manufacturer = self.get_manufacturer(name = response.get("manufacturer"))
+            else:
+                manufacturer = None
+
+            return InvgateAsset(name = response.get("name"), id = response.get("id"), serial = response.get("serial"), inventory_id = response.get("inventory_id"), asset_physical_tag = response.get("asset_physical_tag"), created_at = response.get("created_at"), reported_at = response.get("reported_at"), updated_at = response.get("updated_at"), status = status, location = location, owner = owner, finance = finance, manufacturer = manufacturer, model = response.get("model"), commercial_model = response.get("commercial_model"), asset_type = response.get("asset_type"), default_ip = response.get("default_ip"), mac_address = response.get("mac_address"), asset_type_code = response.get("asset_type_code"), format = response.get("format"))
+        else:
+            print(response)
+            return None
+
+    def update_user(self, user: InvgateUser) -> InvgateUser:
+        """
+        Updates an existing user in Invgate using the data from an InvgateUser object.
+
+        Arguments:
+            user* (InvgateUser): The InvgateUser object to update in Invgate.
+
+        Returns:
+            InvgateUser: If user is updated successfully.
+            None: If user is not updated successfully.
+        """
+        response = self.patch_data(endpoint_path = routes.user(user.id), payload = user.to_json())
+
+        if response["id"]:
+            if response["manager"]:
+                manager = self.get_user(id = response.get("manager"))
+            else:
+                manager = None
+
+            if response["location"]:
+                location = self.get_location(id = response.get("location"))
+            else:
+                location = None
+
+            return InvgateUser(name = response.get("name"), email = response.get("email"), id = response.get("id"), date_of_birth = response.get("date_of_birth"), employee_id = response.get("employee_id"), position = response.get("position"), department = response.get("department"), company = response.get("company"), phone = response.get("phone"), cellphone = response.get("cellphone"), address = response.get("address"), person_type = response.get("person_type"), user = response.get("user"), manager = manager, location = location, cost_center = response.get("cost_center"))
+        else:
+            print(response)
             return None

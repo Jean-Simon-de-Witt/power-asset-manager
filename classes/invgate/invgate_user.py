@@ -3,14 +3,14 @@ class InvgateUser:
     """
     A class for storing Invgate User objects in memory.
     """
-    def __init__(self, id: int, name: str, email: str = None, date_of_birth: str = None, employee_id: str = None, position: str = None, department: str = None, company: str = None, phone: str = None, cellphone: str = None, address: str = None, person_type: str = None, user: str = None, manager: InvgateUser = None, location: InvgateLocation = None, cost_center: str = None):
+    def __init__(self, name: str, email: str, id: int = None, date_of_birth: str = None, employee_id: str = None, position: str = None, department: str = None, company: str = None, phone: str = None, cellphone: str = None, address: str = None, person_type: str = None, user: str = None, manager: InvgateUser = None, location: InvgateLocation = None, cost_center: str = None):
         """
         Creates a new InvgateUser object.
         
         Arguments:
-            id* (int): The unique identifier for each user object.
+            id (int): The unique identifier for each user object.
             name* (str): The user's name.
-            email (str): The user's email.
+            email* (str): The user's email.
             date_of_birth (str): The user's date of birth.
             employee_id (str): The user's employee ID.
             position (str): The user's position.
@@ -72,7 +72,7 @@ class InvgateUser:
         if self.manager:
             string += "Manager:\n"
             string += f"\tID: {self.manager.id}\n"
-            string += f"\tName: {self.manager.id}\n"
+            string += f"\tName: {self.manager.name}\n"
             string += f"\tEmail: {self.manager.email}\n"
             string += f"\tDate of Birth: {self.manager.date_of_birth}\n"
             string += f"\tEmployee ID: {self.manager.employee_id}\n"
@@ -98,3 +98,66 @@ class InvgateUser:
             string += "Location: None\n"
         string += f"Cost Center: {self.cost_center}\n"
         return string
+
+    def to_json(self, include_id: bool = False) -> dict:
+        """
+        Exports the object's properties as a JSON object.
+        
+        Arguments:
+            include_id (bool): Whether or not to include the object's ID in the JSON object. Defaults to False.
+
+        Returns:
+            json (dict): The object's properties as a JSON object.
+        """
+        json = {}
+
+        if self.id and include_id:
+            json["id"] = self.id
+
+        if self.name:
+            json["name"] = self.name
+
+        if self.email:
+            json["email"] = self.email
+
+
+        if self.date_of_birth:
+            json["date_of_birth"] = self.date_of_birth
+
+        if self.employee_id:
+            json["employee_id"] = self.employee_id
+
+        if self.position:
+            json["position"] = self.position
+
+        if self.department:
+            json["department"] = self.department
+
+        if self.company:
+            json["company"] = self.company
+
+        if self.phone:
+            json["phone"] = self.phone
+
+        if self.cellphone:
+            json["cellphone"] = self.cellphone
+
+        if self.address:
+            json["address"] = self.address
+
+        if self.person_type:
+            json["person_type"] = self.person_type
+
+        if self.user:
+            json["user"] = self.user
+
+        if self.manager:
+            json["manager"] = self.manager.id
+
+        if self.location:
+            json["location"] = self.location.id
+
+        if self.cost_center:
+            json["cost_center"] = self.cost_center
+
+        return json

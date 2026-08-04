@@ -20,12 +20,12 @@ if not all([DOMAIN, CLIENT_ID, CLIENT_SECRET]):
 invgate = InvgateConnection(DOMAIN, CLIENT_ID, CLIENT_SECRET)
 
 if invgate.access_token:
-    cnbtest = invgate.get_asset_with_collections(name = "CNBTestEdited")
+    test_user = invgate.get_user(name = "Invgate Test User Edited")
 
-    cnbtest.name = "CNBTest"
-    cnbtest.format = "desktop"
-    print(cnbtest.to_json(include_id = True))
-    invgate.patch_data(routes.asset(cnbtest.id), cnbtest.to_json(include_id = True))
+    print(test_user.to_string())
+    # response = invgate.update_user(test_user)
+
+    # print(response.to_string())
 
 
 
