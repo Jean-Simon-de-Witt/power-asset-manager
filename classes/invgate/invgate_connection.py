@@ -1095,6 +1095,85 @@ class InvgateConnection:
         else:
             return None
 
+    def load_data(self, include_users: bool = False, include_assets: bool = False) -> dict:
+        """
+            A method used to pull lightweight, mass data from Invgate to be used for sorting, filtering, and searching.
+
+            Arguments:
+                users (bool): Specifies whether or not to get users.
+                assets (bool): Specifies whether or not to get assets.
+        """
+        results = {}
+
+        if include_users and include_assets:
+            response = self.get_data(endpoint_path = routes.users())
+            if response and response.get("results"):
+                results["users"] = []
+                temp_users = {}
+                while True:
+                    for user in response.get("results"):
+                        new_user = InvgateUser(name = user.get("name"), email = user.get("email"), id = user.get("id"), employee_id = user.get("employee_id"))
+                        results["users"].append(new_user)
+                        temp_users[user.get("id")] = InvgateUser(new_user)
+
+                    if response.get("next"):
+                        response = self.get_data(full_path = response.get("next"))
+                    else:
+                        break
+
+            response = self.get_data(endpoint_path = routes.assets())
+
+            if response and response.get("results"):
+                results["assets"] = []
+                while True:
+                    for asset in response.get("results"):
+                        owner = None
+                        if asset.get("owner"):
+                            owner = temp_users.get(asset.get("owner"))
+                        results["assets"].append(InvgateAsset(name = asset.get("name"), id = asset.get("id"), created_at = asset.get("created_at"), manufacturer = asset.get("manufacturer"), model = asset.get("model"), owner = owner))
+
+                    if response.get("next"):
+                        response = self.get_data(full_path = response.get("next"))
+                    else:
+                        break
+
+        elif include_users:
+            response = self.get_data(endpoint_path = routes.users())
+            if response and response.get("results"):
+                results["users"] = []
+                while True:
+                    for user in response.get("results"):
+                        results["users"].append(InvgateUser(name = user.get("name"), email = user.get("email"), id = user.get("id"), employee_id = user.get("employee_id")))
+
+                    if response.get("next"):
+                        response = self.get_data(full_path = response.get("next"))
+                    else:
+                        break
+            else:
+                return None
+            
+        elif include_assets:
+            response = self.get_data(routes.assets())
+            if response and response.get("results"):
+                results["assets"] = []
+                while True:
+                    for asset in response.get("results"):
+                        results["assets"].append(InvgateAsset( name = asset.get("name"), id = asset.get("id"), created_at = asset.get("created_at"), manufacturer = asset.get("manufacturer"), model = asset.get("model")))
+                    if response.get("next"):
+                        response = self.get_data(full_path = response.get("next"))
+                    else:
+                        break
+            else:
+                return None
+
+        else:
+            return None
+
+        return results
+
+                    
+            
+
     # =============================================================================================
     # Create Methods: Methods to export data from Python objects and create new objects in Invgate.
     # =============================================================================================

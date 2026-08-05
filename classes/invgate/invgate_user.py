@@ -3,14 +3,14 @@ class InvgateUser:
     """
     A class for storing Invgate User objects in memory.
     """
-    def __init__(self, name: str, email: str, id: int = None, date_of_birth: str = None, employee_id: str = None, position: str = None, department: str = None, company: str = None, phone: str = None, cellphone: str = None, address: str = None, person_type: str = None, user: str = None, manager: InvgateUser = None, location: InvgateLocation = None, cost_center: str = None):
+    def __init__(self, name: str, email: str = None, id: int = None, date_of_birth: str = None, employee_id: str = None, position: str = None, department: str = None, company: str = None, phone: str = None, cellphone: str = None, address: str = None, person_type: str = None, user: str = None, manager: InvgateUser = None, location: InvgateLocation = None, cost_center: str = None):
         """
         Creates a new InvgateUser object.
         
         Arguments:
             id (int): The unique identifier for each user object.
             name* (str): The user's name.
-            email* (str): The user's email.
+            email (str): The user's email.
             date_of_birth (str): The user's date of birth.
             employee_id (str): The user's employee ID.
             position (str): The user's position.

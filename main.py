@@ -32,7 +32,8 @@ def main():
 
     window = MainWindow(connection = invgate)
     window.show()
-
+    invgate.load_data(include_users = True, include_assets = True)
+    print("data loaded.")
     sys.exit(app.exec())
 
 if __name__ == "__main__":
