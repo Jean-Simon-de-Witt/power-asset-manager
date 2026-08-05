@@ -9,7 +9,7 @@ from classes.invgate.invgate_connection import InvgateConnection
 from classes.invgate.invgate_routes import InvgateRoutes as routes
 
 # Frontend classes
-
+from classes.ui.main_window import MainWindow
 # Load Credentials
 def main():
 
@@ -30,7 +30,7 @@ def main():
 
     app = QApplication(sys.argv) 
 
-    window = MainWindow(api_connection=invgate)
+    window = MainWindow(connection = invgate)
     window.show()
 
     sys.exit(app.exec())
