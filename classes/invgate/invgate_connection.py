@@ -1106,7 +1106,7 @@ class InvgateConnection:
         results = {}
 
         if include_users and include_assets:
-            response = self.get_data(endpoint_path = routes.users())
+            response = self.get_data(endpoint_path = routes.users(), query = "ordering=name")
             if response and response.get("results"):
                 results["users"] = []
                 temp_users = {}
@@ -1121,7 +1121,7 @@ class InvgateConnection:
                     else:
                         break
 
-            response = self.get_data(endpoint_path = routes.assets())
+            response = self.get_data(endpoint_path = routes.assets(), query="ordering=name")
 
             if response and response.get("results"):
                 results["assets"] = []
@@ -1138,7 +1138,7 @@ class InvgateConnection:
                         break
 
         elif include_users:
-            response = self.get_data(endpoint_path = routes.users())
+            response = self.get_data(endpoint_path = routes.users(), query="ordering=name")
             if response and response.get("results"):
                 results["users"] = []
                 while True:
@@ -1153,7 +1153,7 @@ class InvgateConnection:
                 return None
             
         elif include_assets:
-            response = self.get_data(routes.assets())
+            response = self.get_data(routes.assets(), query = "ordering=name")
             if response and response.get("results"):
                 results["assets"] = []
                 while True:

@@ -161,3 +161,40 @@ class InvgateUser:
             json["cost_center"] = self.cost_center
 
         return json
+
+    def search(self, tag: str, fields: dict) -> dict:
+        if "name" in fields:
+            if self.name:
+                if not self.name.find(tag) == -1:
+                    return {"status": True, "field": "Name"}
+
+        if "email" in fields:
+            if self.email:
+                if not self.email.find(tag) == -1:
+                    return {"status": True, "field": "E-Mail"}
+
+        if "employee_id" in fields:
+            if self.employee_id:
+                if not self.employee_id.find(tag) == -1:
+                    return {"status": True, "field": "Employee ID"}
+
+        if "position" in fields:
+            if self.position:
+                if not self.position.find(tag) == -1:
+                    return {"status": True, "field": "Position"}
+
+        if "department" in fields:
+            if self.department:
+                if not self.department.find(tag) == -1:
+                    return {"status": True, "field": "Department"}
+
+        if "manager" in fields:
+            if self.manager:
+                if not self.manager.name.find(tag) == -1:
+                    return {"status": True, "field": "Manager"}
+
+        if "location" in fields:
+            if self.location:
+                if not self.location.name.find(tag) == -1:
+                    return {"status": True, "field": "Location"}
+        return {"status": False}
