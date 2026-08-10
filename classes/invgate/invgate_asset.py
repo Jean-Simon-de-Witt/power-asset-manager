@@ -6,7 +6,7 @@ from classes.invgate.invgate_manufacturer import InvgateManufacturer
 from classes.invgate.invgate_health import InvgateHealth
 from classes.invgate.invgate_software import InvgateSoftware
 from classes.invgate.invgate_operating_system_update import InvgateOperatingSystemUpdate
-from classes.utilities.search import FilterParameters
+
 class InvgateAsset:
     """
     A class for storing Invgate Assets in memory.
@@ -60,6 +60,8 @@ class InvgateAsset:
         self.mac_address: str = mac_address
         self.asset_type_code: str = asset_type_code
         self.format: str = format
+
+        self.matched_by: str = None
 
     def populate_collections(self, health: InvgateHealth = None, software: list[InvgateSoftware] = None, operating_system_updates: list[InvgateOperatingSystemUpdate] = None):
         """
@@ -258,89 +260,3 @@ class InvgateAsset:
             json["format"] = self.format
 
         return json
-
-    def search(self, tag: str, fields: dict) -> dict:
-        if "name" in fields:
-            if self.name:
-                if not self.name.find(tag) == -1:
-                    return {"status": True, "field": "Name"}
-        if "serial" in fields:
-            if self.serial:
-                if not self.serial.find(tag) == -1:
-                    return {"status": True, "field": "Serial"}
-
-        if "location" in fields:
-            if self.location:
-                if not self.location.name.find(tag) == -1:
-                    return {"status": True, "field": "Location"}
-
-        if "owner" in fields:
-            if self.owner:
-                if not self.owner.name.find(tag) == -1:
-                    return {"status": True, "field": "Owner"}
-
-        if "model" in fields:
-            if self.model:
-                if not self.model.find(tag) == -1:
-                    return {"status": True, "field": "Model"}
-
-        if "default_ip" in fields:
-            if self.default_ip:
-                if not self.default_ip.find(tag) == -1:
-                    return {"status": True, "field": "Default IP"}
-
-        if "mac_address" in fields:
-            if self.mac_address:
-                if not self.mac_address.find(tag) == -1:
-                    return {"status": True, "field": "MAC Address"}
-
-        return {"status": False}
-
-    def filter(self, filter: FilterParameters) -> bool:
-        if filter.field == "serial" and self.serial:
-            return filter.compare(self.serial)
-
-        if filter.field == "created_at" and self.created_at:
-            return filter.compare(self.created_at)
-
-        if filter.field == "reported_at" and self.reported_at:
-            return filter.compare(self.reported_at)
-
-        if filter.field == "updated_at" and self.updated_at:
-            return filter.compare(self.updated_at)
-
-        if filter.field == "status" and self.status and self.status.name:
-            return filter.compare(self.status.name)
-
-        if filter.field == "location" and self.location:
-            if self.location.name:
-                return filter.compare(self.location.name)
-
-        if filter.field == "owner" and self.owner:
-            if self.owner.name:
-                return filter.compare(self.owner.name)
-
-        if filter.field == "acquisition_cost" and self.finance:
-            if self.finance.acquisition_price:
-                return filter.compare(self.finance.acquisition_price)
-
-        if filter.field == "invoice" and self.finance and self.finance:
-            if self.finance.invoice_id:
-                return filter.compare(self.finance.invoice_id)
-
-        if filter.field == "purchase_order" and self.finance:
-            if self.finance.purchase_order:
-                if self.finance.purchase_order.order_number:
-                    return filter.compare(self.finance.purchase_order.order_number)
-
-        if filter.field == "manufacturer" and self.manufacturer:
-            if self.manufacturer.name:
-                return filter.compare(self.manufacturer.name)
-
-        if filter.field == "mac_address" and self.mac_address:
-            return filter.compare(self.mac_address)
-
-        if filter.field == "format" and self.format:
-            return filter.compare(self.format)
-
-        return False

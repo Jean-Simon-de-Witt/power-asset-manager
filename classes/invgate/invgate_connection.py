@@ -865,7 +865,7 @@ class InvgateConnection:
 
             assets = response.get("results")
             results["assets"] = []
-
+    
             for a in assets:
                 if a["status"]:
                     status = self.get_status(a.get("status"))
@@ -1095,84 +1095,151 @@ class InvgateConnection:
         else:
             return None
 
-    def load_data(self, include_users: bool = False, include_assets: bool = False) -> dict:
-        """
-            A method used to pull lightweight, mass data from Invgate to be used for sorting, filtering, and searching.
-
-            Arguments:
-                users (bool): Specifies whether or not to get users.
-                assets (bool): Specifies whether or not to get assets.
-        """
-        results = {}
-
-        if include_users and include_assets:
-            response = self.get_data(endpoint_path = routes.users(), query = "ordering=name")
-            if response and response.get("results"):
-                results["users"] = []
-                temp_users = {}
+    def get_all_pages(self, response: dict) -> dict:
+        if response:
+            results: dict = {}
+            results["data"] = []
+            if response.get("results"):
+                results["count"] = response.get("count")
                 while True:
-                    for user in response.get("results"):
-                        new_user = InvgateUser(name = user.get("name"), email = user.get("email"), id = user.get("id"), employee_id = user.get("employee_id"))
-                        results["users"].append(new_user)
-                        temp_users[user.get("id")] = InvgateUser(new_user)
+                    results["data"].extend(response.get("results"))
 
-                    if response.get("next"):
-                        response = self.get_data(full_path = response.get("next"))
-                    else:
+                    if not response.get("next"):
                         break
-
-            response = self.get_data(endpoint_path = routes.assets(), query="ordering=name")
-
-            if response and response.get("results"):
-                results["assets"] = []
+                    elif response.get("next") == "None":
+                        break
+                    else:
+                        response = self.get_data(full_path = response.get("next"))
+            elif response.get("data"):
+                results["count"] = len(response.get("data"))
                 while True:
-                    for asset in response.get("results"):
-                        owner = None
-                        if asset.get("owner"):
-                            owner = temp_users.get(asset.get("owner"))
-                        results["assets"].append(InvgateAsset(name = asset.get("name"), id = asset.get("id"), created_at = asset.get("created_at"), manufacturer = asset.get("manufacturer"), model = asset.get("model"), owner = owner))
+                    results["data"].extend(response.get("data"))
 
-                    if response.get("next"):
-                        response = self.get_data(full_path = response.get("next"))
-                    else:
+                    if not response.get("links").get("next"):
                         break
-
-        elif include_users:
-            response = self.get_data(endpoint_path = routes.users(), query="ordering=name")
-            if response and response.get("results"):
-                results["users"] = []
-                while True:
-                    for user in response.get("results"):
-                        results["users"].append(InvgateUser(name = user.get("name"), email = user.get("email"), id = user.get("id"), employee_id = user.get("employee_id")))
-
-                    if response.get("next"):
-                        response = self.get_data(full_path = response.get("next"))
-                    else:
+                    elif response.get("next") == "None":
                         break
+                    else:
+                        response = self.get_data(full_path = response.get("next"))
+
             else:
-                return None
-            
-        elif include_assets:
-            response = self.get_data(routes.assets(), query = "ordering=name")
-            if response and response.get("results"):
-                results["assets"] = []
-                while True:
-                    for asset in response.get("results"):
-                        results["assets"].append(InvgateAsset( name = asset.get("name"), id = asset.get("id"), created_at = asset.get("created_at"), manufacturer = asset.get("manufacturer"), model = asset.get("model")))
-                    if response.get("next"):
-                        response = self.get_data(full_path = response.get("next"))
-                    else:
-                        break
-            else:
-                return None
+                return response
 
+            return results
         else:
             return None
 
-        return results
+                
 
-                    
-            
+                
+    def load_data(self) -> dict:
+
+        results = {}
+
+        # Vendors
+        temp_vendors = {}
+        response = self.get_all_pages(self.get_data(endpoint_path = routes.vendors()))
+        for vendor in response.get("data"):
+            temp_vendors[vendor.get("id")] = InvgateVendor(id = vendor.get("id"), company_name = vendor.get("company_name"), legal_name = vendor.get("legal_name"), status = vendor.get("status"), country = vendor.get("country"), address = vendor.get("address"), email = vendor.get("email"), billing_currency = vendor.get("billing_currency"), phone = vendor.get("phone"), industry = vendor.get("industry"))
+
+        # Manufacturers
+        temp_manufacturers = {}
+        response = self.get_all_pages(self.get_data(endpoint_path = routes.manufacturers()))
+        for manufacturer in response.get("data"):
+            temp_manufacturers[manufacturer.get("name")] = InvgateManufacturer(name = manufacturer.get("name"), id = manufacturer.get("id"))
+
+        # Locations
+        temp_locations = {}
+        response = self.get_all_pages(self.get_data(endpoint_path = routes.locations(), v1 = True))
+        for location in response.get("data"):
+            temp_locations[location.get("id")] = InvgateLocation(name = location.get("attributes").get("name"), id = location.get("id"), full_path = location.get("attributes").get("full_path"), description = location.get("attributes").get("description"))
+
+        # Statuses
+        temp_statuses = {}
+        response = self.get_all_pages(self.get_data(endpoint_path = routes.status(), v1 = True))
+        for status in response.get("data"):
+            temp_statuses[status.get("id")] = InvgateStatus(id = status.get("id"), name = status.get("attributes").get("name"), description = status.get("attributes").get("description"), behavior = status.get("attributes").get("behavior"), is_default = status.get("attributes").get("is_default"))
+
+        # Purchase Orders
+        temp_purchase_orders = {}
+        response = self.get_all_pages(self.get_data(endpoint_path = routes.purchase_orders()))
+        for po in response.get("data"):
+            if po.get("vendor"):
+                vendor = temp_vendors.get(po.get("vendor"))
+            else:
+                vendor: None
+            temp_purchase_orders[po.get("order_number")] = InvgatePurchaseOrder(order_number = po.get("order_number"), id = po.get("id"), vendor = vendor, purchase_order_type = po.get("purchase_order_type"), creation_date = po.get("creation_date"), expected_delivery_date = po.get("expected_delivery_date"), date_delivered = po.get("date_delivered"), ship_method = po.get("ship_method"), ship_to = po.get("ship_to"), shipping_address = po.get("shipping_address"), ship_instructions = po.get("ship_instructions"), billing_address = po.get("billing_address"), status = po.get("status"), subtotal = po.get("subtotal"), freight = po.get("freight"), handling = po.get("handling"), tax = po.get("tax"), total_cost = po.get("total_cost"), cost_center = po.get("cost_center"), contract = po.get("contract"), requested_by = po.get("requested_by"), items = po.get("items"))
+
+        # Finance
+        temp_finance = {}
+        response = self.get_all_pages(self.get_data(endpoint_path = routes.financials()))
+        for finance in response.get("data"):
+            if finance.get("vendor"):
+                vendor = temp_vendors.get(finance.get("vendor"))
+            else:
+                vendor = None
+
+            if finance.get("purchase_order"):
+                purchase_order = temp_purchase_orders.get(finance.get("order_id"))
+            else:
+                purchase_order = None
+
+            temp_finance[finance.get("id")] = InvgateFinance(asset = finance.get("asset"), id = finance.get("id"), acquisition_type = finance.get("acquisition_type"), acquisition_date = finance.get("acquisition_date"), acquisition_price = finance.get("acquisition_price"), actual_price = finance.get("actual_price"), residual_value = finance.get("residual_value"), depreciation_percentage = finance.get("depreciation_percentage"), warranty_date = finance.get("warranty_date"), vendor = vendor, cost_center = finance.get("cost_center"), purchase_order = purchase_order, invoice_id = finance.get("invoice_id"))
+
+        # Users
+        response = self.get_all_pages(self.get_data(endpoint_path = routes.users_detail()))
+        temp_users = {}
+        results["users"] = []
+        for user in response.get("data"):
+            if user.get("manager"):
+                manager_id = user.get("manager").get("id")
+                manager_name = user.get("manager").get("name")
+                manager_email = user.get("manager").get("email")
+            else:
+                manager_id = None
+                manager_name = None
+                manager_email = None
+
+            if user.get("location"):
+                location = temp_locations.get(user.get("location").get("id"))
+            else:
+                location = None
+            user_object = InvgateUser(name = user.get("name"), email = user.get("email"), id = user.get("id"), date_of_birth = user.get("date_of_birth"), employee_id = user.get("employee_id"), position = user.get("position"), department = user.get("department"), company = user.get("company"), phone = user.get("phone"), cellphone = user.get("cellphone"), address = user.get("address"), person_type = user.get("person_type"), user = user.get("user"), manager_id = manager_id, manager_name = manager_name, manager_email = manager_email, location = location, cost_center = user.get("cost_center"))
+            temp_users[user_object.id] = user_object
+            results["users"].append(user_object)
+
+        # Assets
+        results["assets"] = []
+        response = self.get_all_pages(self.get_data(endpoint_path = routes.assets()))
+        for asset in response.get("data"):
+            if asset.get("status"):
+                status = temp_statuses.get(asset.get("status"))
+            else:
+                status = None
+
+            if asset.get("location"):
+                location = temp_locations.get(asset.get("location"))
+            else:
+                location = None
+
+            if asset.get("owner"):
+                owner = temp_users.get(asset.get("owner"))
+            else:
+                owner = None
+
+            if asset.get("finance"):
+                finance = temp_finance.get(asset.get("finance"))
+            else:
+                finance = None
+
+            if asset.get("manufacturer"):
+                manufacturer = temp_manufacturers.get(asset.get("manufacturer"))
+            else:
+                manufacturer = None
+
+            results["assets"].append(InvgateAsset(name = asset.get("name"), id = asset.get("id"), serial = asset.get("serial"), inventory_id = asset.get("inventory_id"), asset_physical_tag = asset.get("asset_physical_tag"), created_at = asset.get("created_at"), reported_at = asset.get("reported_at"), updated_at = asset.get("updated_at"), status = status, location = location, owner = owner, finance = finance, manufacturer = manufacturer, model = asset.get("model"), commercial_model = asset.get("commercial_model"), asset_type = asset.get("asset_type"), default_ip = asset.get("default_ip"), mac_address = asset.get("mac_address"), asset_type_code = asset.get("asset_type_code"), format = asset.get("format")))
+
+        return results
 
     # =============================================================================================
     # Create Methods: Methods to export data from Python objects and create new objects in Invgate.

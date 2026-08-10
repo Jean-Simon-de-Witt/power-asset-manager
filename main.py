@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import QApplication
 # Backend classes
 from classes.invgate.invgate_connection import InvgateConnection
 from classes.invgate.invgate_routes import InvgateRoutes as routes
+from classes.data.data import Data, Search, FilterParameters
 
 # Frontend classes
 from classes.ui.main_window import MainWindow
@@ -32,9 +33,14 @@ def main():
 
     window = MainWindow(connection = invgate)
     window.show()
-    invgate.load_data(include_users = True, include_assets = True)
-    print("data loaded.")
+    data = Data(connection = invgate)
+
+    assets = data.assets
+
+    for asset in assets:
+        print(asset.to_string())
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     main()     

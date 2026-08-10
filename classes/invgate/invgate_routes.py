@@ -1,6 +1,9 @@
 class InvgateRoutes:    
     def users():
         return "/public-api/v2/people/"
+
+    def users_detail():
+        return "/public-api/v2/people/detail/"
     
     def user(id):
         return f"/public-api/v2/people/{id}/"

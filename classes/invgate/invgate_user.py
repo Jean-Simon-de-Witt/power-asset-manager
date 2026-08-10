@@ -3,7 +3,7 @@ class InvgateUser:
     """
     A class for storing Invgate User objects in memory.
     """
-    def __init__(self, name: str, email: str = None, id: int = None, date_of_birth: str = None, employee_id: str = None, position: str = None, department: str = None, company: str = None, phone: str = None, cellphone: str = None, address: str = None, person_type: str = None, user: str = None, manager: InvgateUser = None, location: InvgateLocation = None, cost_center: str = None):
+    def __init__(self, name: str, email: str = None, id: int = None, date_of_birth: str = None, employee_id: str = None, position: str = None, department: str = None, company: str = None, phone: str = None, cellphone: str = None, address: str = None, person_type: str = None, user: str = None, manager_id: int = None, manager_name: str = None, manager_email: str = None, location: InvgateLocation = None, cost_center: str = None):
         """
         Creates a new InvgateUser object.
         
@@ -41,9 +41,13 @@ class InvgateUser:
         self.address: str = address
         self.person_type: str = person_type
         self.user: str = user
-        self.manager: InvgateUser = manager
+        self.manager_id: int = manager_id
+        self.manager_name: str = manager_name
+        self.manager_email: str = manager_email
         self.location: InvgateLocation = location
         self.cost_center: str = cost_center
+
+        self.matched_by: str = None
 
     def to_string(self) -> str:
         """
@@ -69,22 +73,11 @@ class InvgateUser:
         string += f"Person Type: {self.person_type}\n"
         string += f"User: {self.user}\n"
 
-        if self.manager:
+        if self.manager_id:
             string += "Manager:\n"
-            string += f"\tID: {self.manager.id}\n"
-            string += f"\tName: {self.manager.name}\n"
-            string += f"\tEmail: {self.manager.email}\n"
-            string += f"\tDate of Birth: {self.manager.date_of_birth}\n"
-            string += f"\tEmployee ID: {self.manager.employee_id}\n"
-            string += f"\tPosition: {self.manager.position}\n"
-            string += f"\tDepartment: {self.manager.department}\n"
-            string += f"\tCompany: {self.manager.company}\n"
-            string += f"\tPhone: {self.manager.phone}\n"
-            string += f"\tCellphone: {self.manager.cellphone}\n"
-            string += f"\tAddress: {self.manager.address}\n"
-            string += f"\tPerson Type: {self.manager.person_type}\n"
-            string += f"\tUser: {self.manager.user}\n"
-            string += f"\tCost Center: {self.manager.cost_center}\n"
+            string += f"\tID: {self.manager_id}\n"
+            string += f"\tName: {self.manager_name}\n"
+            string += f"\tEmail: {self.manager_email}\n"
         else:
             string += "Manager: None\n"
 
@@ -151,8 +144,8 @@ class InvgateUser:
         if self.user:
             json["user"] = self.user
 
-        if self.manager:
-            json["manager"] = self.manager.id
+        if self.manager_id:
+            json["manager"] = self.manager_id
 
         if self.location:
             json["location"] = self.location.id
@@ -161,40 +154,3 @@ class InvgateUser:
             json["cost_center"] = self.cost_center
 
         return json
-
-    def search(self, tag: str, fields: dict) -> dict:
-        if "name" in fields:
-            if self.name:
-                if not self.name.find(tag) == -1:
-                    return {"status": True, "field": "Name"}
-
-        if "email" in fields:
-            if self.email:
-                if not self.email.find(tag) == -1:
-                    return {"status": True, "field": "E-Mail"}
-
-        if "employee_id" in fields:
-            if self.employee_id:
-                if not self.employee_id.find(tag) == -1:
-                    return {"status": True, "field": "Employee ID"}
-
-        if "position" in fields:
-            if self.position:
-                if not self.position.find(tag) == -1:
-                    return {"status": True, "field": "Position"}
-
-        if "department" in fields:
-            if self.department:
-                if not self.department.find(tag) == -1:
-                    return {"status": True, "field": "Department"}
-
-        if "manager" in fields:
-            if self.manager:
-                if not self.manager.name.find(tag) == -1:
-                    return {"status": True, "field": "Manager"}
-
-        if "location" in fields:
-            if self.location:
-                if not self.location.name.find(tag) == -1:
-                    return {"status": True, "field": "Location"}
-        return {"status": False}
