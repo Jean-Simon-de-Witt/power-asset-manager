@@ -3,7 +3,7 @@ class InvgatePurchaseOrder:
     """
     A class for storing Invgate Purchase Order objects in memory.
     """
-    def __init__(self, order_number: str, id: int = None, vendor: InvgateVendor = None, purchase_order_type: str = None, creation_date: str = None, expected_delivery_date: str = None, date_delivered: str = None, ship_method: str = None, ship_to: str = None, shipping_address: str = None, ship_instructions: str = None, billing_address: str = None, status: str = None, subtotal: float = None, freight: str = None, handling: str = None, tax: float = None, total_cost: float = None, cost_center: str = None, contract: str = None, requested_by: str = None, items: str = None):
+    def __init__(self, id: int, order_number: str, vendor: InvgateVendor, purchase_order_type: str, creation_date: str, expected_delivery_date: str, date_delivered: str, ship_method: str, billing_address: str, status: str, subtotal: float, freight: str, handling: str, tax: float, total_cost: float, cost_center: str, contract: str):
         """
         Creates a new InvgatePurchaseOrder object.
         

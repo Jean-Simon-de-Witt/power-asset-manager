@@ -202,7 +202,7 @@ class InvgateConnection:
     # Populate Methods: Methods to fetch data from Invgate and instantiate them as Python objects
     # ===========================================================================================
 
-    def get_user(self, id: int = None, name: str = None) -> InvgateUser:
+    def get_user(self, id: int = None, name: str = None, email: str = None, employee_id: str = None, user_username: str = None) -> InvgateUser:
         """
         Gets a single user from Invgate and returns an InvgateUser object.
 
@@ -213,70 +213,56 @@ class InvgateConnection:
             InvgateUser: If user is found.
             None: If user is not found.
         """
-        if id and name:
-            response = self.get_data(endpoint_path = routes.user(id))
-        elif id:
-            response = self.get_data(endpoint_path = routes.user(id))
-        elif name:
-            response = self.get_data(endpoint_path = routes.users(), query = f"name={name}").get("results")[0]
-        if response:
-            if response["manager"]:
-                manager = self.get_user(response.get("manager"))
-            else:
-                manager = None
+        parameter_count = 0
+        for parameter in [id, name, email, employee_id, user_username]:
+            if parameter:
+                parameter_count += 1
 
-            if response["location"]:
-                location = self.get_location(response.get("location"))
-            else:
-                location = None
-
-            return InvgateUser(name = response.get("name"), id = response.get("id"), email = response.get("email"), date_of_birth = response.get("date_of_birth"), employee_id = response.get("employee_id"), position = response.get("position"), department = response.get("department"), company = response.get("company"), phone = response.get("phone"), cellphone = response.get("cellphone"), address = response.get("address"), person_type = response.get("person_type"), user = response.get("user"), manager = manager, location = location, cost_center = response.get("cost_center"))
-        return None
-
-    # Gets all users on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateUser objects. If no page is specified, returns data from the first page.
-    def get_users(self, page: str = None) -> dict:
-        """
-        Gets all users on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateUser objects. If no page is specified, returns data from the first page.
-        Arguments:
-            page (str): Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
-        
-        Returns:
-            dict[int, str, str, list[InvgateUser]]: If users are found, there is a previous URL, and a next URL.
-            dict[int, str, list[InvgateUser]]: If users are found, there is a previous URL, or a new URL.
-            dict[int, list[InvgateUser]]: If users are found.
-            None: If no users are found.
-        """
-        if page:
-            response = self.get_data(endpoint_path = routes.users(), page = page)
-        else:
-            response = self.get_data(endpoint_path = routes.users())
-
-        if response and response["results"]:
-            results = {"count": response.get("count")}
-
-            if response["next"]:
-                results["next"] = response.get("next")
-
-            if response["previous"]:
-                results["previous"] = response.get("previous")
-            users = response.get("results")
-            results["users"] = []
-            for u in users:
-                if u["manager"]:
-                    manager = self.get_user(u.get("manager"))
-                else:
-                    manager = None
-
-                if u["location"]:
-                    location = self.get_location(u.get("location"))
-                else:
-                    location = None
-                results["users"].append(InvgateUser(name = u.get("name"), id = u.get("id"), email = u.get("email"), date_of_birth = u.get("date_of_birth"), employee_id = u.get("employee_id"), position = u.get("position"), department = u.get("department"), company = u.get("company"), phone = u.get("phone"), cellphone = u.get("cellphone"), address = u.get("address"), person_type = u.get("person_type"), user = u.get("user"), manager = manager, location = location, cost_center = u.get("cost_center")))
-            return results
-
-        else: 
-            print("No results.")
+        if parameter_count < 1:
+            print("Get User failed: Please provide a field to fetch the user by.")
             return None
+        elif parameter_count > 1:
+            print("Get User failed: Please provide only one field to fetch the user by.")
+            return None
+        else:
+            query: str = ""
+            if id:
+                query = f"ids={id}"
+            elif name:
+                query = f"name={name}"
+            elif email:
+                query = f"email={email}"
+            elif employee_id:
+                query = f"employee_id={employee_id}"
+            elif user_username:
+                query = f"username={user_username}"
+
+            response = self.get_data(endpoint_path = routes.users_detail, query = query)
+        
+            if response and response.get("results") and len(response.get("results")) == 1:
+                user = response.get("results")[0]
+
+                if user.get("manager"):
+                    manager_id = user.get("manager").get("id")
+                    manager_name = user.get("manager").get("name")
+                    manager_email = user.get("manager").get("email")
+                else:
+                    manager_id: int = ""
+                    manager_name: str = ""
+                    manager_email: str = ""
+
+                if user.get("user"):
+                    user_id: int = user.get("user").get("id")
+                    username: str = user.get("user").get("username")
+                else:
+                    user_id: int = 0
+                    username: str = ""
+
+                location: InvgateLocation = self.get_location(self.get("location")) if user.get("location") else None
+
+                return InvgateUser(user.get("id") if user.get("id") else 0, user.get("name") or "", user.get("email") or "", user.get("date_of_birth") or "", user.get("employee_id") or "", user.get("position") or "", user.get("department") or "", user.get("company") or "", user.get("phone") or "", user.get("cellphone") or "", user.get("address") or "", user.get("person_type") or "", user_id, username, manager_id, manager_name, manager_email, location, user.get("cost_center") or "")
+            else:
+                return None
 
     # Gets a single finance from Invgate and returns an InvgateFinance object.
     def get_finance(self, id: int) -> InvgateFinance:
@@ -453,7 +439,7 @@ class InvgateConnection:
             print("No results.")
             return None
 
-    def get_purchase_order(self, id: int) -> InvgatePurchaseOrder:
+    def get_purchase_order(self, id: int, order_number: str) -> InvgatePurchaseOrder:
         """
         Gets a single purchase order from Invgate and returns an InvgatePurchaseOrder object.
 
@@ -464,54 +450,31 @@ class InvgateConnection:
             InvgatePurchaseOrder: If purchase order is found.
             None: If purchase order is not found.
         """
-        response = self.get_data(endpoint_path = routes.purchase_order(id))
-        if response:
-            if response["vendor"]:
-                vendor = self.get_vendor(response.get("vendor"))
-            else:
-                vendor = None
-            return InvgatePurchaseOrder(id = response.get("id"), order_number = response.get("order_number"), vendor = vendor, purchase_order_type = response.get("purchase_order_type"), creation_date = response.get("creation_date"), expected_delivery_date = response.get("expected_delivery_date"), date_delivered = response.get("date_delivered"), ship_method = response.get("ship_method"), ship_to = response.get("ship_to"), shipping_address = response.get("shipping_address"), ship_instructions = response.get("ship_instructions"), billing_address = response.get("billing_address"), status = response.get("status"), subtotal = response.get("subtotal"), freight = response.get("freight"), handling = response.get("handling"), tax = response.get("tax"), total_cost = response.get("total_cost"), cost_center = response.get("cost_center"), contract = response.get("contract"), requested_by = response.get("requested_by"), items = response.get("items"))
-        return None
+        parameter_count = 0
+        for parameter in [id, order_number]:
+            if parameter:
+                parameter_count += 1
 
-    def get_purchase_orders(self, page: str = None) -> dict:
-        """
-        Gets all purchase orders on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgatePurchaseOrder objects. If no page is specified, returns data from the first page.
-        Arguments:
-            page (str): Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
-        
-        Returns:
-            dict[int, str, str, list[InvgatePurchaseOrder]]: If purchase orders are found, there is a previous URL, and a next URL.
-            dict[int, str, list[InvgatePurchaseOrder]]: If purchase orders are found, there is a previous URL, or a new URL.
-            dict[int, list[InvgatePurchaseOrder]]: If purchase orders are found.
-            None: If no purchase orders are found.
-        """
-        if page:
-            response = self.get_data(endpoint_path = routes.purchase_orders(), page = page)
-        else:
-            response = self.get_data(endpoint_path = routes.purchase_orders())
-
-        if response and response["results"]:
-            results = {"count": response.get("count")}
-
-            if response["next"]:
-                results["next"] = response.get("next")
-
-            if response["previous"]:
-                results["previous"] = response.get("previous")
-
-            purchase_orders = response.get("results")
-            results["purchase_orders"] = []
-
-            for po in purchase_orders:
-                if po["vendor"]:
-                    vendor = self.get_vendor(po.get("vendor"))
-                else:
-                    vendor = None
-                results["purchase_orders"].append(InvgatePurchaseOrder(id = po.get("id"), order_number = po.get("order_number"), vendor = vendor, purchase_order_type = po.get("purchase_order_type"), creation_date = po.get("creation_date"), expected_delivery_date = po.get("expected_delivery_date"), date_delivered = po.get("date_delivered"), ship_method = po.get("ship_method"), ship_to = po.get("ship_to"), shipping_address = po.get("shipping_address"), ship_instructions = po.get("ship_instructions"), billing_address = po.get("billing_address"), status = po.get("status"), subtotal = po.get("subtotal"), freight = po.get("freight"), handling = po.get("handling"), tax = po.get("tax"), total_cost = po.get("total_cost"), cost_center = po.get("cost_center"), contract = po.get("contract"), requested_by = po.get("requested_by"), items = po.get("items")))
-            return results
-        else:
-            print("No results.")
+        if parameter_count < 1:
+            print("Get Purchase Order failed: Please provide a field to fetch the purchase order by.")
             return None
+        elif parameter_count > 1:
+            print("Get Purchase Order failed: Please provide only one field to fetch the purchase order by.")
+            return None
+        else:
+            po = None
+            if id:
+                response = self.get_data(endpoint_path = routes.purchase_order(id))
+                po = response if response else None
+            elif order_number:
+                response = self.get_data(endpoint_path = routes.purchase_orders())
+                results = response.get("results") if response else None
+                if results:
+                    for result in results:
+                        if result.get("order_number") == order_number:
+                            po = result
+            vendor = self.get_vendor(po.get("vendor")) if po.get("vendor") else None
+            return InvgatePurchaseOrder(po.get("id") if po.get("id") else 0, po.get("order_number") or "", vendor, po.get("purchase_order_type") or "", po.get("creation_date") or "", po.get("expected_delivery_date") or "", po.get("date_delivered") or "", po.get("ship_method") or "", po.get("billing_address") or "", po.get("status") or "", po.get("subtotal") if po.get("subtotal") else 0, po.get("freight") or "", po.get("handling") or "", po.get("tax") if po.get("tax") else 0, po.get("total_cost") if po.get("total_cost") else 0, po.get("cost_center") or "", po.get("contract") or "")
 
     def get_manufacturer(self, id: int = None, name: str = None) -> InvgateManufacturer:
         """

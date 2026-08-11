@@ -3,7 +3,7 @@ class InvgateUser:
     """
     A class for storing Invgate User objects in memory.
     """
-    def __init__(self, name: str, email: str = None, id: int = None, date_of_birth: str = None, employee_id: str = None, position: str = None, department: str = None, company: str = None, phone: str = None, cellphone: str = None, address: str = None, person_type: str = None, user: str = None, manager_id: int = None, manager_name: str = None, manager_email: str = None, location: InvgateLocation = None, cost_center: str = None):
+    def __init__(self, id: int, name: str, email: str, date_of_birth: str, employee_id: str, position: str, department: str, company: str, phone: str, cellphone: str, address: str, person_type: str, user_id: int, username: str, manager_id: int, manager_name: str, manager_email: str, location: InvgateLocation, cost_center: str):
         """
         Creates a new InvgateUser object.
         
@@ -40,7 +40,8 @@ class InvgateUser:
         self.cellphone: str = cellphone
         self.address: str = address
         self.person_type: str = person_type
-        self.user: str = user
+        self.user_id: int = user_id
+        self.username: str = username
         self.manager_id: int = manager_id
         self.manager_name: str = manager_name
         self.manager_email: str = manager_email
