@@ -2,7 +2,7 @@ class InvgateVendor:
     """
     A class for storing Invgate Vendor objects in memory.
     """
-    def __init__(self, id: int, company_name: str, legal_name: str = None, status: str = None, country: str = None, address: str = None, email: str = None, billing_currency: str = None, phone: str = None, industry: str = None):
+    def __init__(self, id: int, company_name: str, legal_name: str, status: str, country: str, website: str, address: str, email: str, billing_currency: str, phone: str, industry: str):
         """
         Creates a new InvgateVendor object.
         

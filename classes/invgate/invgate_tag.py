@@ -2,7 +2,7 @@ class InvgateTag:
     """
     A class for storing Invgate Tag objects in memory.
     """
-    def __init__(self, id: int, name: str, color: str = None, description: str = None, smart_tag: bool = False, locked: bool = False):
+    def __init__(self, id: int, name: str, color: str, description: str, smart_tag: bool, locked: bool):
         """
         Creates a new InvgateTag object.
         

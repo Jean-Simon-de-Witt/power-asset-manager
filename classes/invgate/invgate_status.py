@@ -2,7 +2,7 @@ class InvgateStatus:
     """
     A class for storing Invgate Status objects in memory.
     """
-    def __init__(self, id: int, name: str, description: str = None, behavior: str = None, is_default: bool = False):
+    def __init__(self, id: int, name: str, description: str, behavior: str, is_default: bool):
         """
         Creates a new InvgateStatus object.
         

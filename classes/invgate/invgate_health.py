@@ -2,7 +2,7 @@ class InvgateHealth:
     """
     A class for storing Invgate Health object in memory.
     """
-    def __init__(self, computer: int, updated_at: str = None, health_rule: str = None, status: str = None):
+    def __init__(self, computer: int, updated_at: str, health_rule: str, status: str):
         """
         Creates a new InvgateHealth object.
         

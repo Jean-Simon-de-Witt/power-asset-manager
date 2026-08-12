@@ -2,7 +2,7 @@ class InvgateLocation:
     """
     A class for storing Invgate Location objects in memory.
     """
-    def __init__(self, name: str, id: int = None, full_path: str = None, description: str = None):
+    def __init__(self, id: int, name: str, full_path: str, description: str, content_type: str):
         """
         Creates a new InvgateLocation object.
         
