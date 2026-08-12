@@ -2,7 +2,7 @@ class InvgateManufacturer:
     """
     A class for storing Invgate Manufacturer objects in memory.
     """
-    def __init__(self, name: str, id: int = None):
+    def __init__(self, id: int, name: str):
         """
         Creates a new InvgateManufacturer object.
         

@@ -213,56 +213,49 @@ class InvgateConnection:
             InvgateUser: If user is found.
             None: If user is not found.
         """
-        parameter_count = 0
-        for parameter in [id, name, email, employee_id, user_username]:
-            if parameter:
-                parameter_count += 1
 
-        if parameter_count < 1:
-            print("Get User failed: Please provide a field to fetch the user by.")
+        if not self.validate_parameters(id, name, email, employee_id, user_username):
+            print("Get User failed: Please provide one field to get a user by.")
             return None
-        elif parameter_count > 1:
-            print("Get User failed: Please provide only one field to fetch the user by.")
-            return None
-        else:
-            query: str = ""
-            if id:
-                query = f"ids={id}"
-            elif name:
-                query = f"name={name}"
-            elif email:
+
+        query: str = ""
+        if id:
+            query = f"ids={id}"
+        elif name:
+            query = f"name={name}"
+        elif email:
                 query = f"email={email}"
-            elif employee_id:
-                query = f"employee_id={employee_id}"
-            elif user_username:
-                query = f"username={user_username}"
+        elif employee_id:
+            query = f"employee_id={employee_id}"
+        elif user_username:
+            query = f"username={user_username}"
 
-            response = self.get_data(endpoint_path = routes.users_detail, query = query)
+        response = self.get_data(endpoint_path = routes.users_detail, query = query)
         
-            if response and response.get("results") and len(response.get("results")) == 1:
-                user = response.get("results")[0]
+        if response and response.get("results") and len(response.get("results")) == 1:
+            user = response.get("results")[0]
 
-                if user.get("manager"):
-                    manager_id = user.get("manager").get("id")
-                    manager_name = user.get("manager").get("name")
-                    manager_email = user.get("manager").get("email")
-                else:
-                    manager_id: int = ""
-                    manager_name: str = ""
-                    manager_email: str = ""
-
-                if user.get("user"):
-                    user_id: int = user.get("user").get("id")
-                    username: str = user.get("user").get("username")
-                else:
-                    user_id: int = 0
-                    username: str = ""
-
-                location: InvgateLocation = self.get_location(self.get("location")) if user.get("location") else None
-
-                return InvgateUser(user.get("id") if user.get("id") else 0, user.get("name") or "", user.get("email") or "", user.get("date_of_birth") or "", user.get("employee_id") or "", user.get("position") or "", user.get("department") or "", user.get("company") or "", user.get("phone") or "", user.get("cellphone") or "", user.get("address") or "", user.get("person_type") or "", user_id, username, manager_id, manager_name, manager_email, location, user.get("cost_center") or "")
+            if user.get("manager"):
+                manager_id = user.get("manager").get("id")
+                manager_name = user.get("manager").get("name")
+                manager_email = user.get("manager").get("email")
             else:
-                return None
+                manager_id: int = ""
+                manager_name: str = ""
+                manager_email: str = ""
+
+            if user.get("user"):
+                user_id: int = user.get("user").get("id")
+                username: str = user.get("user").get("username")
+            else:
+                user_id: int = 0
+                username: str = ""
+
+            location: InvgateLocation = self.get_location(self.get("location")) if user.get("location") else None
+
+            return InvgateUser(user.get("id") if user.get("id") else 0, user.get("name") or "", user.get("email") or "", user.get("date_of_birth") or "", user.get("employee_id") or "", user.get("position") or "", user.get("department") or "", user.get("company") or "", user.get("phone") or "", user.get("cellphone") or "", user.get("address") or "", user.get("person_type") or "", user_id, username, manager_id, manager_name, manager_email, location, user.get("cost_center") or "")
+        print("Get User failed: User not found or invalid response received.")
+        return None
 
     # Gets a single finance from Invgate and returns an InvgateFinance object.
     def get_finance(self, id: int) -> InvgateFinance:
@@ -288,6 +281,7 @@ class InvgateConnection:
             else:
                 purchase_order = None
             return InvgateFinance(id = response.get("id"), asset = response.get("asset"), acquisition_type = response.get("acquisition_type"), acquisition_date = response.get("acquisition_date"), acquisition_price = response.get("acquisition_price"), actual_price = response.get("actual_price"), residual_value = response.get("residual_value"), depreciation_percentage = response.get("depreciation_percentage"), warranty_date = response.get("warranty_date"), vendor = vendor, cost_center = response.get("cost_center"), purchase_order = purchase_order, invoice_id = response.get("invoice_id"))
+        print("Get Finance failed: Finance not found or invalid response received.")
         return None
 
     def get_finances(self, page: str = None) -> dict:
@@ -450,31 +444,23 @@ class InvgateConnection:
             InvgatePurchaseOrder: If purchase order is found.
             None: If purchase order is not found.
         """
-        parameter_count = 0
-        for parameter in [id, order_number]:
-            if parameter:
-                parameter_count += 1
-
-        if parameter_count < 1:
-            print("Get Purchase Order failed: Please provide a field to fetch the purchase order by.")
+        if not self.validate_parameters(id, order_number):
+            print("Get Purchase Order failed: Please provide one field to get a purchase order by.")
             return None
-        elif parameter_count > 1:
-            print("Get Purchase Order failed: Please provide only one field to fetch the purchase order by.")
-            return None
-        else:
-            po = None
-            if id:
-                response = self.get_data(endpoint_path = routes.purchase_order(id))
-                po = response if response else None
-            elif order_number:
-                response = self.get_data(endpoint_path = routes.purchase_orders())
-                results = response.get("results") if response else None
-                if results:
-                    for result in results:
-                        if result.get("order_number") == order_number:
-                            po = result
-            vendor = self.get_vendor(po.get("vendor")) if po.get("vendor") else None
-            return InvgatePurchaseOrder(po.get("id") if po.get("id") else 0, po.get("order_number") or "", vendor, po.get("purchase_order_type") or "", po.get("creation_date") or "", po.get("expected_delivery_date") or "", po.get("date_delivered") or "", po.get("ship_method") or "", po.get("billing_address") or "", po.get("status") or "", po.get("subtotal") if po.get("subtotal") else 0, po.get("freight") or "", po.get("handling") or "", po.get("tax") if po.get("tax") else 0, po.get("total_cost") if po.get("total_cost") else 0, po.get("cost_center") or "", po.get("contract") or "")
+        
+        po = None
+        if id:
+            response = self.get_data(endpoint_path = routes.purchase_order(id))
+            po = response if response else None
+        elif order_number:
+            response = self.get_data(endpoint_path = routes.purchase_orders())
+            results = response.get("results") if response else None
+            if results:
+                for result in results:
+                    if result.get("order_number") == order_number:
+                        po = result
+        vendor = self.get_vendor(po.get("vendor")) if po.get("vendor") else None
+        return InvgatePurchaseOrder(po.get("id") if po.get("id") else 0, po.get("order_number") or "", vendor, po.get("purchase_order_type") or "", po.get("creation_date") or "", po.get("expected_delivery_date") or "", po.get("date_delivered") or "", po.get("ship_method") or "", po.get("billing_address") or "", po.get("status") or "", po.get("subtotal") if po.get("subtotal") else 0, po.get("freight") or "", po.get("handling") or "", po.get("tax") if po.get("tax") else 0, po.get("total_cost") if po.get("total_cost") else 0, po.get("cost_center") or "", po.get("contract") or "")
 
     def get_manufacturer(self, id: int = None, name: str = None) -> InvgateManufacturer:
         """
@@ -488,51 +474,21 @@ class InvgateConnection:
             InvgateManufacturer: If manufacturer is found.
             None: If manufacturer is not found.
         """
-        if id and name:
-            response = self.get_data(endpoint_path = routes.manufacturer(id))
-        elif id:
-            response = self.get_data(endpoint_path = routes.manufacturer(id))
-        elif name:
-            response = self.get_data(endpoint_path = routes.manufacturers(), query = f"name={name}").get("results")[0]
-        if response:
-            return InvgateManufacturer(id = response.get("id"), name = response.get("name"))
-        return None
-
-    def get_manufacturers(self, page = None) -> dict:
-        """
-        Gets all manufacturers on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateManufacturer objects. If no page is specified, returns data from the first page.
-        Arguments:
-            page (str): Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
-        
-        Returns:
-            dict[int, str, str, list[InvgateManufacturer]]: If manufacturers are found, there is a previous URL, and a next URL.
-            dict[int, str, list[InvgateManufacturer]]: If manufacturers are found, there is a previous URL, or a new URL.
-            dict[int, list[InvgateManufacturer]]: If manufacturers are found.
-            None: If no manufacturers are found.
-        """
-        if page:
-            response = self.get_data(endpoint_path = routes.manufacturers(), page = page)
-        else:
-            response = self.get_data(endpoint_path = routes.manufacturers())
-
-        if response and response["results"]:
-            results = {"count": response.get("count")}
-
-            if response["next"]:
-                results["next"] = response.get("next")
-
-            if response["previous"]:
-                results["previous"] = response.get("previous")
-
-            manufacturers = response.get("results")
-            results["manufacturers"] = []
-
-            for m in manufacturers:
-                results["manufacturers"].append(InvgateManufacturer(id = m.get("id"), name = m.get("name")))
-            return results
-        else:
-            print("No results.")
+        if not self.validate_parameters(id, name):
+            print("Get Manufacturer failed: Please provide one field to get a manufacturer by.")
             return None
+
+        query: str = ""
+        if id:
+            query = f"ids={id}"
+        elif name:
+            query = f"name={name}"
+
+        response = self.get_data(endpoint_path = routes.manufacturers, query = query)
+        if response and response.get("results") and len(response.get("results") == 1):
+            manufacturer = response.get("results")[0]
+            return InvgateManufacturer(manufacturer.get("id"), manufacturer.get("name"))
+        return None
 
     def get_health(self, computer_id: int) -> InvgateHealth:
         """
@@ -549,41 +505,6 @@ class InvgateConnection:
         if response:
             return InvgateHealth(computer = response.get("computer"), updated_at = response.get("updated_at"), health_rule = response.get("health_rule"), status = response.get("status"))
         return None
-
-    def get_healths(self, page: str = None) -> dict:
-        """
-        Gets all health on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateHealth objects. If no page is specified, returns data from the first page.
-        Arguments:
-            page (str): Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
-        
-        Returns:
-            dict[int, str, str, list[InvgateHealth]]: If healths are found, there is a previous URL, and a next URL.
-            dict[int, str, list[InvgateHealth]]: If healths are found, there is a previous URL, or a new URL.
-            dict[int, list[InvgateHealth]]: If healths are found.
-            None: If no healths are found.
-        """
-        if page:
-            response = self.get_data(endpoint_path = routes.healths(), page = page)
-        else:
-            response = self.get_data(endpoint_path = routes.healths())
-        if response and response["results"]:
-            results = {"count": response.get("count")}
-
-            if response["next"]:
-                results["next"] = response.get("next")
-
-            if response["previous"]:
-                results["previous"] = response.get("previous")
-
-            healths = response.get("results")
-            results["healths"] = []
-
-            for h in healths:
-                results["healths"].append(InvgateHealth(computer = h.get("computer"), updated_at = h.get("updated_at"), health_rule = h.get("health_rule"), status = h.get("status")))
-            return results
-        else:
-            print("No results.")
-            return None
 
     def get_status(self, id: int) -> InvgateStatus:
         """
@@ -1057,43 +978,6 @@ class InvgateConnection:
             return asset
         else:
             return None
-
-    def get_all_pages(self, response: dict) -> dict:
-        if response:
-            results: dict = {}
-            results["data"] = []
-            if response.get("results"):
-                results["count"] = response.get("count")
-                while True:
-                    results["data"].extend(response.get("results"))
-
-                    if not response.get("next"):
-                        break
-                    elif response.get("next") == "None":
-                        break
-                    else:
-                        response = self.get_data(full_path = response.get("next"))
-            elif response.get("data"):
-                results["count"] = len(response.get("data"))
-                while True:
-                    results["data"].extend(response.get("data"))
-
-                    if not response.get("links").get("next"):
-                        break
-                    elif response.get("next") == "None":
-                        break
-                    else:
-                        response = self.get_data(full_path = response.get("next"))
-
-            else:
-                return response
-
-            return results
-        else:
-            return None
-
-                
-
                 
     def load_data(self) -> dict:
 
@@ -1353,3 +1237,49 @@ class InvgateConnection:
         else:
             print(response)
             return None
+
+# ================================================
+# Helper Functions
+# ================================================
+    def get_all_pages(self, response: dict) -> dict:
+        if response:
+            results: dict = {}
+            results["data"] = []
+            if response.get("results"):
+                results["count"] = response.get("count")
+                while True:
+                    results["data"].extend(response.get("results"))
+
+                    if not response.get("next"):
+                        break
+                    elif response.get("next") == "None":
+                        break
+                    else:
+                        response = self.get_data(full_path = response.get("next"))
+            elif response.get("data"):
+                results["count"] = len(response.get("data"))
+                while True:
+                    results["data"].extend(response.get("data"))
+
+                    if not response.get("links").get("next"):
+                        break
+                    elif response.get("next") == "None":
+                        break
+                    else:
+                        response = self.get_data(full_path = response.get("next"))
+            else:
+                return response
+
+            return results
+        else:
+            return None
+
+    def validate_parameters(parameters: list) -> bool:
+        count_parameters: int = 0
+        for parameter in parameters:
+            if parameter:
+                count_parameters += 1
+
+        if count_parameters != 1:
+            return False
+        return True
