@@ -4,7 +4,7 @@ class InvgateSoftware:
     """
     A class for storing Invgate Software objects in memory.
     """
-    def __init__(self, id: int, resource_type: str, install_date: str, install_path: str, uninstall_call: str, computer: int, version: InvgateVersion, program: InvgateProgram, manufacturer: InvgateManufacturer):
+    def __init__(self, id: int, resource_type: str, install_date: str, install_path: str, uninstall_call: str, computer: int, version: InvgateVersion):
         """
         Creates a new InvgateSoftware object.
         
@@ -37,8 +37,6 @@ class InvgateSoftware:
         self.uninstall_call: str = uninstall_call
         self.computer: int = computer
         self.version: InvgateVersion = version
-        self.program: InvgateProgram = program
-        self.manufacturer: InvgateManufacturer = manufacturer
 
     def to_string(self) -> str:
         """
@@ -53,13 +51,14 @@ class InvgateSoftware:
 
     
 class InvgateVersion:
-    def __init__(self, version: str, internal_version: str, edition: str):
+    def __init__(self, version: str, internal_version: str, edition: str, program: InvgateProgram):
         self.version: str = version
         self.internal_version: str = internal_version
         self.edition: str = edition
+        self.program: InvgateProgram = program
         
 class InvgateProgram:
-    def __init__(self, name: str, license: str, category: str, types: str, types_key: str, tags: list, is_metering_enabled: bool):
+    def __init__(self, name: str, license: str, category: str, types: str, types_key: str, tags: list, is_metering_enabled: bool, manufacturer: InvgateManufacturer):
         self.name: str = name
         self.license: str = license
         self.category: str = category
@@ -67,3 +66,4 @@ class InvgateProgram:
         self.types_key: str = types_key
         self.tags: list = tags
         self.is_metering_enabled: bool = is_metering_enabled
+        self.manufacturer: InvgateManufacturer = manufacturer

@@ -11,7 +11,7 @@ from classes.invgate.invgate_health import InvgateHealth
 from classes.invgate.invgate_status import InvgateStatus
 from classes.invgate.invgate_location import InvgateLocation
 from classes.invgate.invgate_software import InvgateSoftware, InvgateVersion, InvgateProgram
-from classes.invgate.invgate_operating_system_update import InvgateOperatingSystemUpdate
+from classes.invgate.invgate_update import InvgateUpdate, InvgateOperatingSystemUpdateVersion, InvgateOperatingSystemUpdate
 from classes.invgate.invgate_asset import InvgateAsset
 
 class InvgateConnection:
@@ -270,16 +270,10 @@ class InvgateConnection:
         """        
         response = self.get_data(endpoint_path = routes.financial(id))
         if response:
-            if response["supplier"]:
-                vendor = self.get_vendor(response.get("supplier"))
-            else:
-                vendor = None
-
-            if response["order_id"]:
-                purchase_order = self.get_purchase_order_by_order_id(response.get("order_id"))
-            else:
-                purchase_order = None
-            return InvgateFinance(id = response.get("id"), asset = response.get("asset"), acquisition_type = response.get("acquisition_type"), acquisition_date = response.get("acquisition_date"), acquisition_price = response.get("acquisition_price"), actual_price = response.get("actual_price"), residual_value = response.get("residual_value"), depreciation_percentage = response.get("depreciation_percentage"), warranty_date = response.get("warranty_date"), vendor = vendor, cost_center = response.get("cost_center"), purchase_order = purchase_order, invoice_id = response.get("invoice_id"))
+            vendor = self.get_vendor(response.get("supplier")) if response.get("supplier") else None
+            purchase_order = self.get_purchase_order(response.get("order_id")) if response.get("order_id") else None
+            return InvgateFinance(response.get("id") if response.get("id") else 0, response.get("asset") if response.get("asset") else 0, response.get("acquisition_type") or "", response.get("acquisition_date") or "", response.get("acquisition_price") if response.get("acquisition_price") else 0, response.get("actual_price") if response.get("actual_price") else 0, response.get("depreciation_percentage") if response.get("depreciation_percentage") else 0, response.get("residual_value") if response.get("residual_value") else 0, response.get("warranty_date") or "", vendor, response.get("cost_center") or "", purchase_order, response.get("invoice_id") or "")
+            
         print("Get Finance failed: Finance not found or invalid response received.")
         return None
 
@@ -473,11 +467,10 @@ class InvgateConnection:
         """
         response = self.get_data(endpoint_path = routes.software(id))
         if response:
-            version: InvgateVersion = InvgateVersion(response.get("version").get("version") or "", response.get("version").get("internal_version") or "", response.get("version").get("edition") or "") if response.get("version") else None
-            program: InvgateProgram = InvgateProgram(response.get("version").get("program").get("name") or "", response.get("version").get("program").get("license") or "", response.get("version").get("program").get("category") or "", response.get("version").get("program").get("types") or "", response.get("version").get("program").get("types_key") or "", response.get("version").get("program").get("tags") or "", response.get("version").get("program").get("is_metering_enabled")) if response.get("version") and response.get("version").get("program") else None
             manufacturer: InvgateManufacturer = InvgateManufacturer(response.get("version").get("program").get("manufacturer").get("id"), response.get("version").get("program").get("manufacturer").get("name") or "") if response.get("version") and response.get("version").get("program") and response.get("version").get("program").get("manufacturer") else None
-
-            return InvgateSoftware(response.get("id") if response.get("id") else 0, response.get("resource_type") or "", response.get("install_date") or "", response.get("install_path") or "", response.get("uninstall_call") or "", response.get("computer") if response.get("computer") else 0, version, program, manufacturer) if response.get("version") and response.get("version").get("program") and response.get("version").get("program").get("manufacturer") else None
+            program: InvgateProgram = InvgateProgram(response.get("version").get("program").get("name") or "", response.get("version").get("program").get("license") or "", response.get("version").get("program").get("category") or "", response.get("version").get("program").get("types") or "", response.get("version").get("program").get("types_key") or "", response.get("version").get("program").get("tags") or "", response.get("version").get("program").get("is_metering_enabled"), manufacturer) if response.get("version") and response.get("version").get("program") else None
+            version: InvgateVersion = InvgateVersion(response.get("version").get("version") or "", response.get("version").get("internal_version") or "", response.get("version").get("edition") or "", program) if response.get("version") else None
+            return InvgateSoftware(response.get("id") if response.get("id") else 0, response.get("resource_type") or "", response.get("install_date") or "", response.get("install_path") or "", response.get("uninstall_call") or "", response.get("computer") if response.get("computer") else 0, version) if response.get("version") and response.get("version").get("program") and response.get("version").get("program").get("manufacturer") else None
         print("Get Software failed: Software not found or invalid response received.")
 
     def get_asset(self, id: int = None, name: str = None) -> InvgateAsset:
@@ -498,8 +491,6 @@ class InvgateConnection:
             response = self.get_data(endpoint_path = routes.asset(id))
         elif name:
             response = self.get_data(endpoint_path = routes.assets(), query = f"name={name}").get("results")[0]
-
-
         if response:
             if response["status"]:
                 status = self.get_status(response.get("status"))
@@ -530,68 +521,7 @@ class InvgateConnection:
         else:
             return None
 
-    def get_assets(self, page: str = None) -> dict:
-        """
-        Gets all assets on the specified page from Invgate and returns the count, previous page, next page, and a list of InvgateAsset objects. If no page is specified, returns data from the first page.
-        
-        Arguments:
-            page (str): Specifies which page to get data from. If it's not specified, data will be accessed from the first page.
-
-        Returns:
-            dict[int, str, str, list[InvgateAsset]]: if assets found, there is a previous URL, and a next URL.
-            dict[int, str, list[InvgateAsset]]: If assets are found, there is a previous URL, or a next URL
-            dict[int, list[InvgateAsset]]: If assets are found.
-            None: If no assets are found.
-        """
-        if page:
-            response = self.get_data(endpoint_path = routes.assets(), page = page)
-        else:
-            response = self.get_data(endpoint_path = routes.assets())
-
-        if response and response["results"]:
-            results = {"count": response.get("count")}
-
-            if response["next"]:
-                results["next"] = response.get("next")
-
-            if response["previous"]:
-                results["previous"] = response.get("previous")
-
-            assets = response.get("results")
-            results["assets"] = []
-    
-            for a in assets:
-                if a["status"]:
-                    status = self.get_status(a.get("status"))
-                else:
-                    status = None
-
-                if a["location"]:
-                    location = self.get_location(a.get("location"))
-                else:
-                    location = None
-
-                if a["owner"]:
-                    owner = self.get_user(a.get("owner"))
-                else:
-                    owner = None
-
-                if a["finance"]:
-                    finance = self.get_finance(a.get("finance"))
-                else:
-                    finance = None
-
-                if a["manufacturer"]:
-                    manufacturer = self.get_manufacturer(name = a.get("manufacturer"))
-                else:
-                    manufacturer = None
-
-                results["assets"].append(InvgateAsset(name = a.get("name"), serial = a.get("serial"), inventory_id = a.get("inventory_id"), asset_physical_tag = a.get("asset_physical_tag"), created_at = a.get("created_at"), reported_at = a.get("reported_at"), updated_at = a.get("updated_at"), status = status, location = location, owner = owner, finance = finance, manufacturer = manufacturer, model = a.get("model"), commercial_model = a.get("commercial_model"), asset_type = a.get("asset_type"), default_ip = a.get("default_ip"), mac_address = a.get("mac_address"), asset_type_code = a.get("asset_type_code"), format = a.get("format")))
-            return results
-        else:
-            return None
-
-    def get_operating_system_update(self, id: int) -> InvgateOperatingSystemUpdate:
+    def get_update(self, id: int) -> InvgateUpdate:
         """
         Gets a single operating system update from Invgate and returns an InvgateOperatingSystemUpdate object.
 
@@ -604,11 +534,13 @@ class InvgateConnection:
         """
         response = self.get_data(endpoint_path = routes.operating_system_update(id))
         if response:
-            return InvgateOperatingSystemUpdate(id = response.get("id"), install_date = response.get("install_date"), status = response.get("status"), computer = response.get("computer"), version = response.get("os_update_version").get("version"), release_date = response.get("os_update_version").get("release_date"), short_name = response.get("os_update_version").get("os_update").get("short_name"), name = response.get("os_update_version").get("os_update").get("name"), update_type = response.get("os_update_version").get("os_update").get("update_type"), os_type = response.get("os_update_version").get("os_update").get("os_type"), severity = response.get("os_update_version").get("os_update").get("severity"), support_url = response.get("os_update_version").get("os_update").get("support_url"))
-        else:
-            return None
+            os_update: InvgateOperatingSystemUpdate = InvgateOperatingSystemUpdate(response.get("os_update_version").get("os_update").get("short_name") or "", response.get("os_update_version").get("os_update").get("name") or "", response.get("os_update_version").get("os_update").get("update_type") or "", response.get("os_update_version").get("os_update").get("os_type") or "", response.get("os_update_version").get("os_update").get("severity") or "", response.get("os_update_version").get("os_update").get("support_url") or "") if response.get("os_update_version") and response.get("os_update_version").get("os_update") else None
+            os_update_version: InvgateOperatingSystemUpdateVersion = InvgateOperatingSystemUpdateVersion(response.get("os_update_version").get("version") or "", response.get("os_update_version").get("release_date") or "", os_update) if response.get("os_update_version") else None
+            return InvgateUpdate(response.get("id") if response.get("id") else 0, response.get("install_date") or "", response.get("status") or "", response.get("computer") if response.get("computer") else 0, os_update_version)
+        print("Get Update Failed: Update not found or invalid response received.")
+        return None
 
-    def get_operating_system_updates_for_computer(self, computer_id: int) -> dict:
+    def get_updates_for_computer(self, computer_id: int) -> dict:
         """
         Gets all operating system updates that belong to the specified asset id and returns them as InvgateOperatingSystemUpdate objects
         Arguments:
@@ -617,20 +549,21 @@ class InvgateConnection:
             dict[int, list[InvgateOperatingSystemUpdate]]: If operating system updates are found.
             None: If no operating system updates are found.
         """
-        response = self.get_data(endpoint_path = routes.operating_system_updates(), query = f"asset_id={computer_id}")
-        if response and response["results"]:
-            results = {"count": response.get("count")}
-            results["operating_system_updates"] = []
+        response = self.get_all_pages(self.get_data(endpoint_path = routes.operating_system_updates(), query = f"asset_id={computer_id}"))
+        if response and response.get("data"):
+            results = {}
+            results["count"] = response.get("count")
+            results["updates"] = []
+            updates = response.get("data")
 
-            while True:
-                operating_system_updates = response.get("results")
-                for os_update in operating_system_updates:
-                    results["operating_system_updates"].append(InvgateOperatingSystemUpdate(id = os_update.get("id"), install_date = os_update.get("install_date"), status = os_update.get("status"), computer = os_update.get("computer"), version = os_update.get("os_update_version").get("version"), release_date = os_update.get("os_update_version").get("release_date"), short_name = os_update.get("os_update_version").get("os_update").get("short_name"), name = os_update.get("os_update_version").get("os_update").get("name"), update_type = os_update.get("os_update_version").get("os_update").get("update_type"), os_type = os_update.get("os_update_version").get("os_update").get("os_type"), severity = os_update.get("os_update_version").get("os_update").get("severity"), support_url = os_update.get("os_update_version").get("os_update").get("support_url")))
-                if response["next"]:
-                    response = self.get_data(full_path = response.get("next"))
-                else:
-                    break
+            for update in updates:
+                os_update: InvgateOperatingSystemUpdate = InvgateOperatingSystemUpdate(update.get("os_update_version").get("os_update").get("short_name") or "", update.get("os_update_version").get("os_update").get("name") or "", update.get("os_update_version").get("os_update").get("update_type") or "", update.get("os_update_version").get("os_update").get("os_type") or "", update.get("os_update_version").get("os_update").get("severity") or "", update.get("os_update_version").get("os_update").get("support_url") or "") if update.get("os_update_version") and update.get("os_update_version").get("os_update") else None
+                os_update_version: InvgateOperatingSystemUpdateVersion = InvgateOperatingSystemUpdateVersion(update.get("os_update_version").get("version") or "", update.get("os_update_version").get("release_date") or "", os_update) if update.get("os_update_version") else None
+                results["updates"].append(InvgateUpdate(update.get("id") if update.get("id") else 0, update.get("install_date") or "", update.get("status") or "", update.get("computer") if update.get("computer") else 0, os_update_version))
             return results
+        print("Get Software failed: No results or invalid response received.")
+        return None
+
 
     def get_software_for_computer(self, computer_id: int) -> list:
         """
@@ -641,29 +574,24 @@ class InvgateConnection:
             dict[int, list[InvgateSoftware]]: If software installations are found.
             None: If no software installations are found.
         """
-        response = self.get_data(endpoint_path = routes.softwares(), query = f"asset_id={computer_id}")
-        if response and response["results"]:
-            results = {"count": response.get("count")}
-            results["softwares"] =  []
-            while True:
-                softwares = response.get("results")
-                for s in softwares:
-                    if s["version"]["program"]["manufacturer"]:
-                        manufacturer = InvgateManufacturer(id = s.get("version").get("program").get("manufacturer").get("id"), name = s.get("version").get("program").get("manufacturer").get("name"))
-                    else:
-                        manufacturer = None
+        response = self.get_all_pages(self.get_data(endpoint_path = routes.manufacturers()))
+        manufacturers: dict[InvgateManufacturer] = {}
+        if response and response.get("data"):
+            for manufacturer in response.get("data"):
+                manufacturers[manufacturer.get("id")] = InvgateManufacturer(manufacturer.get("id"), manufacturer.get("name"))
 
-                    results["softwares"].append(InvgateSoftware(id = s.get("id"), resource_type = s.get("resource_type"), install_date = s.get("install_date"), uninstall_call = s.get("uninstall_call"), computer = s.get("computer"), version = s.get("version").get("version"), internal_version = s.get("version").get("internal_version"), edition = s.get("version").get("edition"), name = s.get("version").get("program").get("name"), manufacturer = manufacturer, license = s.get("version").get("program").get("license"), category = s.get("version").get("program").get("cateogry"), types = s.get("version").get("program").get("types"), types_key = s.get("version").get("program").get("types_key"), tags = s.get("version").get("program").get("tags"), is_metering_enabled = s.get("version").get("program").get("is_metering_enabled")))
+        response = self.get_all_pages(self.get_data(endpoint_path = routes.softwares(), query = f"asset_id={computer_id}"))
+        if response and response.get("data"):
+            results = {}
+            results["count"] = response.get("count")
+            results["software"] = []
+            softwares = response.get("data")
 
-                if response["next"]:
-                    response = self.get_data(full_path = response.get("next"))
-                else:
-                    break
-            return results
-        else:
-            print("No results.")
-            return None
-
+            for software in softwares:
+                manufacturer: InvgateManufacturer = manufacturers.get(software.get("version").get("program").get("manufacturer").get("id")) if software.get("version") and software.get("version").get("program") and software.get("version").get("program").get("manufacturer") and manufacturers.get(software.get("version").get("program").get("manufacturer")) else None
+                program: InvgateProgram = InvgateProgram(software.get("version").get("program").get("name") or "", software.get("version").get("program").get("license") or "", software.get("version").get("program").get("category") or "", software.get("version").get("program").get("types") or "", software.get("version").get("program").get("types_key") or "", software.get("version").get("program").get("tags") or "", software.get("version").get("program").get("is_metering_enabled"), manufacturer) if software.get("version") and software.get("version").get("program") else None
+                version: InvgateVersion = InvgateVersion(software.get("version").get("version") or "", software.get("version").get("internal_version") or "", software.get("version").get("edition") or "", program) if software.get("version") else None
+            return InvgateSoftware(software.get("id") if software.get("id") else 0, software.get("resource_type") or "", software.get("install_date") or "", software.get("install_path") or "", software.get("uninstall_call") or "", software.get("computer") if software.get("computer") else 0, version) if software.get("version") and software.get("version").get("program") and software.get("version").get("program").get("manufacturer") else None
 
     def get_asset_with_collections(self, id: int = None, name: str = None) -> InvgateAsset:
         """
