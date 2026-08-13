@@ -5,13 +5,13 @@ from classes.invgate.invgate_finance import InvgateFinance
 from classes.invgate.invgate_manufacturer import InvgateManufacturer
 from classes.invgate.invgate_health import InvgateHealth
 from classes.invgate.invgate_software import InvgateSoftware
-from classes.invgate.invgate_operating_system_update import InvgateOperatingSystemUpdate
+from classes.invgate.invgate_update import InvgateUpdate
 
 class InvgateAsset:
     """
     A class for storing Invgate Assets in memory.
     """
-    def __init__(self, name: str, id: int = None, serial: str = None, inventory_id: str = None, asset_physical_tag: str = None, created_at: str = None, reported_at: str = None, updated_at: str = None, status: InvgateStatus = None, location: InvgateLocation = None, owner: InvgateUser = None, finance: InvgateFinance = None, manufacturer: InvgateManufacturer = None, model: str = None, commercial_model: str = None, asset_type: str = None, default_ip: str = None, mac_address: str = None, asset_type_code: str = None, format: str = None):
+    def __init__(self, id: int, name: str, manufacturer: InvgateManufacturer, model: str, commercial_model: str, serial: str, inventory_id: int, asset_physical_tag: str, physical_identifier_epc: str, created_at: str, reported_at: str, updated_at: str, finance: InvgateFinance, asset_type: str, asset_type_code: str, owner: InvgateUser, location: InvgateLocation, status: InvgateStatus, default_ip: str, mac_address: str, format: str):
         """
         Creates a new InvgateAsset object.
         
@@ -63,7 +63,7 @@ class InvgateAsset:
 
         self.matched_by: str = None
 
-    def populate_collections(self, health: InvgateHealth = None, software: list[InvgateSoftware] = None, operating_system_updates: list[InvgateOperatingSystemUpdate] = None):
+    def populate_collections(self, health: InvgateHealth = None, software: list[InvgateSoftware] = None, updates: list[InvgateUpdate] = None):
         """
         Populates the asset's collections with the provided data.
         
@@ -83,9 +83,9 @@ class InvgateAsset:
             for s in software:
                 self.software.append(s)
 
-        if operating_system_updates:
-            self.operating_system_updates: list[InvgateOperatingSystemUpdate] = []
-            for os_update in operating_system_updates:
+        if updates:
+            self.operating_system_updates: list[InvgateUpdate] = []
+            for os_update in updates:
                 self.operating_system_updates.append(os_update)
 
     def to_string(self) -> str:

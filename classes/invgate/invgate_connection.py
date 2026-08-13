@@ -230,7 +230,7 @@ class InvgateConnection:
         elif user_username:
             query = f"username={user_username}"
 
-        response = self.get_data(endpoint_path = routes.users_detail, query = query)
+        response = self.get_data(endpoint_path = routes.users_detail(), query = query)
         
         if response and response.get("results") and len(response.get("results")) == 1:
             user = response.get("results")[0]
@@ -473,7 +473,7 @@ class InvgateConnection:
             return InvgateSoftware(response.get("id") if response.get("id") else 0, response.get("resource_type") or "", response.get("install_date") or "", response.get("install_path") or "", response.get("uninstall_call") or "", response.get("computer") if response.get("computer") else 0, version) if response.get("version") and response.get("version").get("program") and response.get("version").get("program").get("manufacturer") else None
         print("Get Software failed: Software not found or invalid response received.")
 
-    def get_asset(self, id: int = None, name: str = None) -> InvgateAsset:
+    def get_asset(self, id: int = None, name: str = None, serial: str = None) -> InvgateAsset:
         """
         Gets a single asset from Invgate and returns an InvgateAsset object.
         
@@ -485,41 +485,32 @@ class InvgateConnection:
             InvgateAsset: If asset is found.
             None: If asset is not found.
         """
-        if id and name:
-            response = self.get_data(endpoint_path = routes.asset(id))
-        elif id:
-            response = self.get_data(endpoint_path = routes.asset(id))
-        elif name:
-            response = self.get_data(endpoint_path = routes.assets(), query = f"name={name}").get("results")[0]
-        if response:
-            if response["status"]:
-                status = self.get_status(response.get("status"))
-            else:
-                status = None
-
-            if response["location"]:
-                location = self.get_location(response.get("location"))
-            else:
-                location = None
-
-            if response["owner"]:
-                owner = self.get_user(response.get("owner"))
-            else:
-                owner = None
-
-            if response["finance"]:
-                finance = self.get_finance(response.get("finance"))
-            else:
-                finance = None
-
-            if response["manufacturer"]:
-                manufacturer = self.get_manufacturer(name = response.get("manufacturer"))
-            else:
-                manufacturer = None
-
-            return InvgateAsset(name = response.get("name"), id = response.get("id"), serial = response.get("serial"), inventory_id = response.get("inventory_id"), asset_physical_tag = response.get("asset_physical_tag"), created_at = response.get("created_at"), reported_at = response.get("reported_at"), updated_at = response.get("updated_at"), status = status, location = location, owner = owner, finance = finance, manufacturer = manufacturer, model = response.get("model"), commercial_model = response.get("commercial_model"), asset_type = response.get("asset_type"), default_ip = response.get("default_ip"), mac_address = response.get("mac_address"), asset_type_code = response.get("asset_type_code"), format = response.get("format"))
-        else:
+        if not self.validate_parameters(id, name, serial):
+            print("Get Asset failed: please provide one parameter to get an asset by.")
             return None
+        
+        query = ""
+        if id:
+            query = f"ids={id}"
+        elif name:
+            query = f"name={name}"
+        elif serial:
+            query = f"serial={serial}"
+
+        response = self.get_data(endpoint_path = routes.assets(), query = query)
+        
+        if response and response.get("results") and len(response.get("results")) == 1:
+            asset = response.get("results")[0]
+            
+            manufacturer: InvgateManufacturer = self.get_manufacturer(name = asset.get("manufacturer")) if asset.get("manufacturer") else None
+            finance: InvgateFinance = self.get_finance(id = asset.get("finance")) if asset.get("finance") else None
+            owner: InvgateUser = self.get_user(id = asset.get("owner")) if asset.get("owner") else None
+            location: InvgateLocation = self.get_location(id = asset.get("location")) if asset.get("location") else None
+            status: InvgateStatus = self.get_status(id = asset.get("status")) if asset.get("status") else None
+            
+            return InvgateAsset(asset.get("id") if asset.get("id") else 0, asset.get("name") or "", manufacturer, asset.get("model") or "", asset.get("commercial_model") or "", asset.get("serial") or "", asset.get("inventory_id") if asset.get("inventory_id") else 0, asset.get("asset_physical_tag") or "", asset.get("physical_identifier_epc") or "", asset.get("created_at") or "", asset.get("reported_at") or "", asset.get("updated_at") or "", finance, asset.get("asset_type") or "", asset.get("asset_type_code") or "", owner, location, status, asset.get("default_ip") or "", asset.get("mac_address") or "", asset.get("format") or "")
+        print("Get Asset failed: Asset not found or invalid response received.")
+        return None
 
     def get_update(self, id: int) -> InvgateUpdate:
         """
@@ -593,7 +584,7 @@ class InvgateConnection:
                 version: InvgateVersion = InvgateVersion(software.get("version").get("version") or "", software.get("version").get("internal_version") or "", software.get("version").get("edition") or "", program) if software.get("version") else None
             return InvgateSoftware(software.get("id") if software.get("id") else 0, software.get("resource_type") or "", software.get("install_date") or "", software.get("install_path") or "", software.get("uninstall_call") or "", software.get("computer") if software.get("computer") else 0, version) if software.get("version") and software.get("version").get("program") and software.get("version").get("program").get("manufacturer") else None
 
-    def get_asset_with_collections(self, id: int = None, name: str = None) -> InvgateAsset:
+    def get_asset_with_collections(self, id: int = None, name: str = None, serial: str = None) -> InvgateAsset:
         """
         Gets a single asset from Invgate along with its collections and returns an InvgateAsset object.
         
@@ -605,53 +596,37 @@ class InvgateConnection:
             InvgateAsset: If asset is found.
             None: If asset is not found.
         """
-        if id and name:
-            response = self.get_data(endpoint_path = routes.asset(id))
-        elif id:
-            response = self.get_data(endpoint_path = routes.asset(id))
-        elif name:
-            response = self.get_data(endpoint_path = routes.assets(), query = f"name={name}").get("results")[0]
-
-        if response:
-            if response["status"]:
-                status = self.get_status(response.get("status"))
-            else:
-                status = None
-
-            if response["location"]:
-                location = self.get_location(response.get("location"))
-            else:
-                location = None
-
-            if response["owner"]:
-                owner = self.get_user(response.get("owner"))
-            else:
-                owner = None
-
-            if response["finance"]:
-                finance = self.get_finance(response.get("finance"))
-            else:
-                finance = None
-
-            if response["manufacturer"]:
-                manufacturer = self.get_manufacturer(name = response.get("manufacturer"))
-            else:
-                manufacturer = None
-
-            asset = InvgateAsset(name = response.get("name"), id = response.get("id"), serial = response.get("serial"), inventory_id = response.get("inventory_id"), asset_physical_tag = response.get("asset_physical_tag"), created_at = response.get("created_at"), reported_at = response.get("reported_at"), updated_at = response.get("updated_at"), status = status, location = location, owner = owner, finance = finance, manufacturer = manufacturer, model = response.get("model"), commercial_model = response.get("commercial_model"), asset_type = response.get("asset_type"), default_ip = response.get("default_ip"), mac_address = response.get("mac_address"), asset_type_code = response.get("asset_type_code"), format = response.get("format"))
-            health = self.get_health(asset.id)
-            software = self.get_software_for_computer(asset.id)
-            operating_system_updates = self.get_operating_system_updates_for_computer(asset.id)
-
-            if software and operating_system_updates:
-                asset.populate_collections(health = health, software = software.get("softwares"), operating_system_updates = operating_system_updates.get("operating_system_updates"))
-            elif software:
-                asset.populate_collections(health = health, software = software.get("softwares"))
-            elif operating_system_updates:
-                asset.populate_collections(health = health, operating_system_updates = operating_system_updates.get("operating_system_updates"))
-            return asset
-        else:
+        if not self.validate_parameters(id, name, serial):
+            print("Get Asset failed: please provide one parameter to get an asset by.")
             return None
+        
+        query = ""
+        if id:
+            query = f"ids={id}"
+        elif name:
+            query = f"name={name}"
+        elif serial:
+            query = f"serial={serial}"
+
+        response = self.get_data(endpoint_path = routes.assets(), query = query)
+        
+        if response and response.get("results") and len(response.get("results")) == 1:
+            asset = response.get("results")[0]
+            
+            manufacturer: InvgateManufacturer = self.get_manufacturer(name = asset.get("manufacturer")) if asset.get("manufacturer") else None
+            finance: InvgateFinance = self.get_finance(id = asset.get("finance")) if asset.get("finance") else None
+            owner: InvgateUser = self.get_user(id = asset.get("owner")) if asset.get("owner") else None
+            location: InvgateLocation = self.get_location(id = asset.get("location")) if asset.get("location") else None
+            status: InvgateStatus = self.get_status(id = asset.get("status")) if asset.get("status") else None
+            
+            asset_object = InvgateAsset(asset.get("id") if asset.get("id") else 0, asset.get("name") or "", manufacturer, asset.get("model") or "", asset.get("commercial_model") or "", asset.get("serial") or "", asset.get("inventory_id") if asset.get("inventory_id") else 0, asset.get("asset_physical_tag") or "", asset.get("physical_identifier_epc") or "", asset.get("created_at") or "", asset.get("reported_at") or "", asset.get("updated_at") or "", finance, asset.get("asset_type") or "", asset.get("asset_type_code") or "", owner, location, status, asset.get("default_ip") or "", asset.get("mac_address") or "", asset.get("format") or "")
+
+            health: InvgateHealth = self.get_health(asset.get("id"))
+            software: list[InvgateSoftware] = self.get_software_for_computer(asset.get("id"))
+            updates: list[InvgateUpdate] = self.get_updates_for_computer(asset.get("id"))
+            asset_object.populate_collections(health = health, software = software, updates = updates)
+        print("Get Asset failed: Asset not found or invalid response received.")
+        return None
                 
     def load_data(self) -> dict:
 
@@ -661,51 +636,38 @@ class InvgateConnection:
         temp_vendors = {}
         response = self.get_all_pages(self.get_data(endpoint_path = routes.vendors()))
         for vendor in response.get("data"):
-            temp_vendors[vendor.get("id")] = InvgateVendor(id = vendor.get("id"), company_name = vendor.get("company_name"), legal_name = vendor.get("legal_name"), status = vendor.get("status"), country = vendor.get("country"), address = vendor.get("address"), email = vendor.get("email"), billing_currency = vendor.get("billing_currency"), phone = vendor.get("phone"), industry = vendor.get("industry"))
+            temp_vendors[vendor.get("id")] = InvgateVendor(vendor.get("id") if vendor.get("id") else 0, vendor.get("company_name") or "", vendor.get("legal_name") or "", vendor.get("status") or "", vendor.get("tax_id") or "", vendor.get("country") or "", vendor.get("website") or "", vendor.get("address") or "", vendor.get("email") or "", vendor.get("billing_currency") or "", vendor.get("phone") or "", vendor.get("industry") or "")
 
         # Manufacturers
         temp_manufacturers = {}
         response = self.get_all_pages(self.get_data(endpoint_path = routes.manufacturers()))
         for manufacturer in response.get("data"):
-            temp_manufacturers[manufacturer.get("name")] = InvgateManufacturer(name = manufacturer.get("name"), id = manufacturer.get("id"))
+            temp_manufacturers[manufacturer.get("name")] = InvgateManufacturer(manufacturer.get("id") if manufacturer.get("id") else 0, manufacturer.get("name") or "")
 
         # Locations
         temp_locations = {}
         response = self.get_all_pages(self.get_data(endpoint_path = routes.locations(), v1 = True))
         for location in response.get("data"):
-            temp_locations[location.get("id")] = InvgateLocation(name = location.get("attributes").get("name"), id = location.get("id"), full_path = location.get("attributes").get("full_path"), description = location.get("attributes").get("description"))
-
+            temp_locations[location.get("id")] = InvgateLocation(location.get("id") if location.get("id") else 0, location.get("attributes").get("name") or "", location.get("attributes").get("full_path") or "", location.get("attributes").get("description") or "", location.get("attributes").get("content_type") or "")
         # Statuses
         temp_statuses = {}
         response = self.get_all_pages(self.get_data(endpoint_path = routes.status(), v1 = True))
         for status in response.get("data"):
-            temp_statuses[status.get("id")] = InvgateStatus(id = status.get("id"), name = status.get("attributes").get("name"), description = status.get("attributes").get("description"), behavior = status.get("attributes").get("behavior"), is_default = status.get("attributes").get("is_default"))
-
+            temp_statuses[status.get("id")] = InvgateStatus(status.get("id") if status.get("id") else 0, status.get("attributes").get("name") or "", status.get("attributes").get("description") or "", status.get("attributes").get("behavior") or "", status.get("attributes").get("is_default") if status.get("attributes").get("is_default") else False)
         # Purchase Orders
         temp_purchase_orders = {}
         response = self.get_all_pages(self.get_data(endpoint_path = routes.purchase_orders()))
         for po in response.get("data"):
-            if po.get("vendor"):
-                vendor = temp_vendors.get(po.get("vendor"))
-            else:
-                vendor: None
-            temp_purchase_orders[po.get("order_number")] = InvgatePurchaseOrder(order_number = po.get("order_number"), id = po.get("id"), vendor = vendor, purchase_order_type = po.get("purchase_order_type"), creation_date = po.get("creation_date"), expected_delivery_date = po.get("expected_delivery_date"), date_delivered = po.get("date_delivered"), ship_method = po.get("ship_method"), ship_to = po.get("ship_to"), shipping_address = po.get("shipping_address"), ship_instructions = po.get("ship_instructions"), billing_address = po.get("billing_address"), status = po.get("status"), subtotal = po.get("subtotal"), freight = po.get("freight"), handling = po.get("handling"), tax = po.get("tax"), total_cost = po.get("total_cost"), cost_center = po.get("cost_center"), contract = po.get("contract"), requested_by = po.get("requested_by"), items = po.get("items"))
-
+            vendor = temp_vendors.get(po.get("vendor")) if po.get("vendor") else None
+            temp_purchase_orders[po.get("order_number")] = InvgatePurchaseOrder(po.get("id") if po.get("id") else 0, po.get("order_number") or "", vendor, po.get("purchase_order_type") or "", po.get("creation_date") or "", po.get("expected_delivery_date") or "", po.get("date_delivered") or "", po.get("ship_method") or "", po.get("billing_address") or "", po.get("status") or "", po.get("subtotal") if po.get("subtotal") else 0, po.get("freight") or "", po.get("handling") or "", po.get("tax") if po.get("tax") else 0, po.get("total_cost") if po.get("total_cost") else 0, po.get("cost_center") or "", po.get("contract") or "")
         # Finance
         temp_finance = {}
         response = self.get_all_pages(self.get_data(endpoint_path = routes.financials()))
         for finance in response.get("data"):
-            if finance.get("vendor"):
-                vendor = temp_vendors.get(finance.get("vendor"))
-            else:
-                vendor = None
+            vendor = temp_vendors.get(finance.get("vendor")) if finance.get("vendor") else None
+            purchase_order = temp_purchase_orders.get(finance.get("order_id")) if finance.get("order_id") else None
 
-            if finance.get("purchase_order"):
-                purchase_order = temp_purchase_orders.get(finance.get("order_id"))
-            else:
-                purchase_order = None
-
-            temp_finance[finance.get("id")] = InvgateFinance(asset = finance.get("asset"), id = finance.get("id"), acquisition_type = finance.get("acquisition_type"), acquisition_date = finance.get("acquisition_date"), acquisition_price = finance.get("acquisition_price"), actual_price = finance.get("actual_price"), residual_value = finance.get("residual_value"), depreciation_percentage = finance.get("depreciation_percentage"), warranty_date = finance.get("warranty_date"), vendor = vendor, cost_center = finance.get("cost_center"), purchase_order = purchase_order, invoice_id = finance.get("invoice_id"))
+            temp_finance[finance.get("id")] = InvgateFinance(finance.get("id") if finance.get("id") else 0, finance.get("asset") if finance.get("asset") else 0, finance.get("acquisition_type") or "", finance.get("acquisition_date") or "", finance.get("acquisition_price") if finance.get("acquisition_price") else 0, finance.get("actual_price") if finance.get("actual_price") else 0, finance.get("depreciation_percentage") if finance.get("depreciation_percentage") else 0, finance.get("residual_value") if finance.get("residual_value") else 0, finance.get("warranty_date") or "", vendor, finance.get("cost_center") or "", purchase_order, finance.get("invoice_id") or "")
 
         # Users
         response = self.get_all_pages(self.get_data(endpoint_path = routes.users_detail()))
@@ -720,45 +682,26 @@ class InvgateConnection:
                 manager_id = None
                 manager_name = None
                 manager_email = None
+            if user.get("user"):
+                user_id = user.get("id")
+                username = user.get("username")
+                
 
-            if user.get("location"):
-                location = temp_locations.get(user.get("location").get("id"))
-            else:
-                location = None
-            user_object = InvgateUser(name = user.get("name"), email = user.get("email"), id = user.get("id"), date_of_birth = user.get("date_of_birth"), employee_id = user.get("employee_id"), position = user.get("position"), department = user.get("department"), company = user.get("company"), phone = user.get("phone"), cellphone = user.get("cellphone"), address = user.get("address"), person_type = user.get("person_type"), user = user.get("user"), manager_id = manager_id, manager_name = manager_name, manager_email = manager_email, location = location, cost_center = user.get("cost_center"))
-            temp_users[user_object.id] = user_object
+            location = temp_locations.get(user.get("location").get("id")) if user.get("location") and user.get("location").get("id") else None
+            user_object = InvgateUser(user.get("id") if user.get("id") else 0, user.get("name") or "", user.get("email") or "", user.get("date_of_birth") or "", user.get("employee_id") or "", user.get("position") or "", user.get("department") or "", user.get("company") or "", user.get("phone") or "", user.get("cellphone") or "", user.get("address") or "", user.get("person_type") or "", user_id, username, manager_id, manager_name, manager_email, location, user.get("cost_center") or "")
             results["users"].append(user_object)
 
         # Assets
         results["assets"] = []
         response = self.get_all_pages(self.get_data(endpoint_path = routes.assets()))
         for asset in response.get("data"):
-            if asset.get("status"):
-                status = temp_statuses.get(asset.get("status"))
-            else:
-                status = None
+            status = temp_statuses.get(asset.get("status")) if asset.get("status") else None
+            location = temp_locations.get(asset.get("location")) if asset.get("location") else None
+            owner = temp_users.get(asset.get("owner")) if asset.get("owner") else None
+            finance = temp_finance.get(asset.get("finance")) if asset.get("finance") else None
+            manufacturer = temp_manufacturers.get(asset.get("manufacturer")) if asset.get("manufacturer") else None
 
-            if asset.get("location"):
-                location = temp_locations.get(asset.get("location"))
-            else:
-                location = None
-
-            if asset.get("owner"):
-                owner = temp_users.get(asset.get("owner"))
-            else:
-                owner = None
-
-            if asset.get("finance"):
-                finance = temp_finance.get(asset.get("finance"))
-            else:
-                finance = None
-
-            if asset.get("manufacturer"):
-                manufacturer = temp_manufacturers.get(asset.get("manufacturer"))
-            else:
-                manufacturer = None
-
-            results["assets"].append(InvgateAsset(name = asset.get("name"), id = asset.get("id"), serial = asset.get("serial"), inventory_id = asset.get("inventory_id"), asset_physical_tag = asset.get("asset_physical_tag"), created_at = asset.get("created_at"), reported_at = asset.get("reported_at"), updated_at = asset.get("updated_at"), status = status, location = location, owner = owner, finance = finance, manufacturer = manufacturer, model = asset.get("model"), commercial_model = asset.get("commercial_model"), asset_type = asset.get("asset_type"), default_ip = asset.get("default_ip"), mac_address = asset.get("mac_address"), asset_type_code = asset.get("asset_type_code"), format = asset.get("format")))
+            results["assets"].append(InvgateAsset(asset.get("id") if asset.get("id") else 0, asset.get("name") or "", manufacturer, asset.get("model") or "", asset.get("commercial_model") or "", asset.get("serial") or "", asset.get("inventory_id") if asset.get("inventory_id") else 0, asset.get("asset_physical_tag") or "", asset.get("physical_identifier_epc") or "", asset.get("created_at") or "", asset.get("reported_at") or "", asset.get("updated_at") or "", finance, asset.get("asset_type") or "", asset.get("asset_type_code") or "", owner, location, status, asset.get("default_ip"), asset.get("mac_address") or "", asset.get("format") or ""))
 
         return results
 
