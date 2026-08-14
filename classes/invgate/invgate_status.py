@@ -1,4 +1,6 @@
-class InvgateStatus:
+from classes.invgate.invgate_object import InvgateObject
+
+class InvgateStatus(InvgateObject):
     """
     A class for storing Invgate Status objects in memory.
     """
@@ -21,20 +23,3 @@ class InvgateStatus:
         self.description: str = description
         self.behavior: str = behavior
         self.is_default: bool = is_default
-
-    def to_string(self):
-        """
-        Exports the object's properties as a formatted string.
-        
-        Arguments:
-            None:
-
-        Returns:
-            string (str): The object's properties as a formatted string.
-        """
-        string = f"ID: {self.id}\n"
-        string += f"Name: {self.name}\n"
-        string += f"Description: {self.description}\n"
-        string += f"Behavior: {self.behavior}\n"
-        string += f"Is Default: {self.is_default}\n"
-        return string

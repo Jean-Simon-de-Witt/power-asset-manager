@@ -1,4 +1,3 @@
-from classes.data.collections import Collection
 from classes.data.conditions import Conditions, Condition
 class Field:
     def __init__(self, name: str, applicable_conditions: list[Condition], searchable: bool, filterable: bool, orderable: bool):
@@ -8,8 +7,10 @@ class Field:
         self.filterable: bool = filterable
         self.orderable: bool = orderable
 
-    def contained_within(self, collection: Collection):
-        return self in collection.contained_fields
+    def is_applicable(self, condition: Condition):
+        if condition in self.applicable_conditions:
+            return True
+        return False
 
 class Fields:
     user_name: Field = Field(name = "user_name", applicable_conditions = [], searchable = True, filterable = False, orderable = True)

@@ -122,19 +122,19 @@ class FilterParameters:
         for parameter in parameters.copy():
             if parameter:
                 if parameter.operator == "initial":
-                    if parameter.field.contained_within(Collections.users):
+                    if Collections.users.contains_field(parameter.field):
                         self.user_parameters.append(parameter)
                         parameters.remove(parameter)
-                    if parameter.field.contained_within(Collections.assets):
+                    if Collections.assets.containes_field(parameter.field):
                         self.asset_parameters.append(parameter)
                         parameters.remove(parameter)
 
 
         for parameter in parameters:
             if parameter:
-                if parameter.field.contained_within(Collections.users):
+                if Collections.users.contains_field(parameter.field):
                     self.user_parameters.append(parameter)
-                if parameter.field.contained_within(Collections.assets):
+                if Collections.users.contains_field(parameter.field):
                     self.asset_parameters.append(parameter)
 
     def filter_record(self, user: InvgateUser = None, asset: InvgateAsset = None) -> bool:
@@ -166,9 +166,9 @@ class FilterParameters:
                 if parameter.operator == "initial":
                     parameter.operator = "and"
 
-                if parameter.field.contained_within(Collections.assets):
+                if Collections.assets.contains_field(parameter.field):
                     self.asset_parameters.append(parameter)
-                elif parameter.field.contained_within(Collections.users):
+                elif Collections.users.contains_field(parameter.field):
                    self.user_parameters.append(parameter) 
 
 class SearchParameter:
@@ -217,9 +217,9 @@ class SearchParameters:
 
         for parameter in parameters:
             if parameter:
-                if parameter.field.contained_within(Collections.assets):
+                if Collections.assets.contains_field(parameter.field):
                     self.asset_parameters.append(parameter)
-                if parameter.field.contained_within(Collections.users):
+                if Collections.users.contains_field(parameter.field):
                     self.user_parameters.append(parameter)
         
     def search_record(self, asset: InvgateAsset = None, user: InvgateUser = None) -> bool:
@@ -316,9 +316,9 @@ class OrderParameters:
 
         for parameter in parameters:
             if parameter:
-                if parameter.field.contained_within(Collections.assets):
+                if Collections.assets.contains_field(parameter.field):
                     self.asset_parameters.append(parameter)
-                elif parameter.field.contained_within(Collections.users):
+                elif Collections.users.contains_field(parameter.field):
                     self.user_parameters.append(parameter)
 
     def sort_collections(self, assets: list[InvgateAsset], users: list[InvgateUser]):
@@ -344,9 +344,9 @@ class OrderParameters:
     def add_parameters(self, parameters: list[OrderParameter]) -> None:
         for parameter in parameters:
             if parameter.field.orderable:
-                if parameter.field.contained_within(Collections.assets):
+                if Collections.assets.contains_field(parameter.field):
                     self.asset_parameters.append(parameter)
-                elif parameter.field.contained_within(Collections.users):
+                elif Collections.users.contains_field(parameter.field):
                     self.user_parameters.append(parameter)
 
 class QueryParameters:

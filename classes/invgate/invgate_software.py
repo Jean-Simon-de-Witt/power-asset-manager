@@ -1,6 +1,7 @@
+from classes.invgate.invgate_object import InvgateObject
 from classes.invgate.invgate_manufacturer import InvgateManufacturer
 
-class InvgateSoftware:
+class InvgateSoftware(InvgateObject):
     """
     A class for storing Invgate Software objects in memory.
     """
@@ -37,33 +38,21 @@ class InvgateSoftware:
         self.uninstall_call: str = uninstall_call
         self.computer: int = computer
         self.version: InvgateVersion = version
-
-    def to_string(self) -> str:
-        """
-        Exports the object's properties as a formatted string.
-        
-        Arguments:
-            None:
-
-        Returns:
-            string (str): The object's properties as a formatted string.
-        """
-
     
-class InvgateVersion:
+class InvgateVersion(InvgateObject):
     def __init__(self, version: str, internal_version: str, edition: str, program: InvgateProgram):
         self.version: str = version
         self.internal_version: str = internal_version
         self.edition: str = edition
         self.program: InvgateProgram = program
         
-class InvgateProgram:
-    def __init__(self, name: str, license: str, category: str, types: str, types_key: str, tags: list, is_metering_enabled: bool, manufacturer: InvgateManufacturer):
+class InvgateProgram(InvgateObject):
+    def __init__(self, name: str, license: str, category: str, types: str, types_key: str, tags: str, is_metering_enabled: bool, manufacturer: InvgateManufacturer):
         self.name: str = name
         self.license: str = license
         self.category: str = category
         self.types: str = types
         self.types_key: str = types_key
-        self.tags: list = tags
+        self.tags: str = tags
         self.is_metering_enabled: bool = is_metering_enabled
         self.manufacturer: InvgateManufacturer = manufacturer

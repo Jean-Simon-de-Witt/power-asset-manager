@@ -1,17 +1,20 @@
-class InvgateUpdate:
+from classes.invgate.invgate_object import InvgateObject
+
+class InvgateUpdate(InvgateObject):
     def __init__(self, id: int, install_date: str, status: str, computer: int, operating_system_update_version: InvgateOperatingSystemUpdateVersion):
         self.id: int = id
         self.install_date: str = install_date
         self.status: str = status
         self.computer: int = computer
+        self.operating_system_update_version: InvgateOperatingSystemUpdateVersion = operating_system_update_version
 
-class InvgateOperatingSystemUpdateVersion:
+class InvgateOperatingSystemUpdateVersion(InvgateObject):
     def __init__(self, version: str, release_date: str, operating_system_update: InvgateOperatingSystemUpdate):
         self.version: str = version
         self.release_date: str = release_date
         self.operating_system_update: InvgateOperatingSystemUpdate = operating_system_update
 
-class InvgateOperatingSystemUpdate:
+class InvgateOperatingSystemUpdate(InvgateObject):
     def __init__(self, short_name: str, name: str, update_type: str, os_type: str, severity: str, support_url: str):
         self.short_name: str = short_name
         self.name: str = name

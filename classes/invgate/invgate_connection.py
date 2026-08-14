@@ -27,12 +27,10 @@ class InvgateConnection:
         self.client_id = client_id
         self.client_secret = client_secret
 
-        # Initialise a session
         self.session = requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
         self.access_token = None
 
-        # Attempt to authenticate
         self.authenticate()
     # ==============================================================================================
     # Authenticate function: Attempts to authenticate, returns a token if successful.
@@ -62,7 +60,7 @@ class InvgateConnection:
             self.access_token = None
 
     # ==============================================================================================
-    # Get Data function: Makes GET requests to the API using the authenticated session.
+    # Request Methods: General functions that interact directly to the API by sending requests.
     # ==============================================================================================
     def get_data(self, endpoint_path: str = None, page: str = None, v1: bool = False, query: str = None, full_path: str = None):
         """
@@ -120,9 +118,7 @@ class InvgateConnection:
         except requests.exceptions.RequestException as e:
             print(f"GET request failed for {endpoint_path}: {e}")
             return None
-    # ==============================================================================================
-    # Post Data function: Creates and adds new records to the system using the authenticated session
-    # ==============================================================================================
+
     def post_data(self, endpoint_path, payload):
         # End if not authenticated
         if not self.access_token:
@@ -175,9 +171,7 @@ class InvgateConnection:
             if hasattr(e, 'response') and e.response is not None:
                 print(f"Server response: {e.response.text}")
                 return None
-    # ==============================================================================================
-    # Delete Data function: Deletes records from the system using the authenticated session
-    # ==============================================================================================
+
     def delete_data(self, endpoint_path):
         if not self.access_token:
             return None
@@ -214,7 +208,7 @@ class InvgateConnection:
             None: If user is not found.
         """
 
-        if not self.validate_parameters(id, name, email, employee_id, user_username):
+        if not self.validate_parameters([id, name, email, employee_id, user_username]):
             print("Get User failed: Please provide one field to get a user by.")
             return None
 
@@ -290,7 +284,7 @@ class InvgateConnection:
         """        
         response = self.get_data(endpoint_path = routes.vendor(id))
         if response:
-            return InvgateVendor(response.get("id") if response.get("id") else 0, response.get("company_name") or "", response.get("legal_name") or "", response.get("status") or "", response.get("country") or "", response.get("website") or "", response.get("address") or "", response.get("email") or "", response.get("billing_currency") or "", response.get("phone") or "", response.get("industry") or "")
+            return InvgateVendor(response.get("id") if response.get("id") else 0, response.get("company_name") or "", response.get("legal_name") or "", response.get("status") or "", response.get("country") or "", response.get("tax_id") or "", response.get("website") or "", response.get("address") or "", response.get("email") or "", response.get("billing_currency") or "", response.get("phone") or "", response.get("industry") or "")
         return None
 
     def get_tag(self, id: int = None, name: str = None) -> InvgateTag:
@@ -304,7 +298,8 @@ class InvgateConnection:
             InvgateTag: If tag is found.
             None: If tag is not found.
         """
-        if not self.validate_parameters(id, name):
+
+        if not self.validate_parameters([id, name]):
             print("Get Tag failed: Please provide one field to get a tag by.")
             return None
         query = ""
@@ -320,7 +315,7 @@ class InvgateConnection:
         print("Get Tag failed: Tag not found or invalid response received.")
         return None
 
-    def get_purchase_order(self, id: int, order_number: str) -> InvgatePurchaseOrder:
+    def get_purchase_order(self, id: int = None, order_number: str = None) -> InvgatePurchaseOrder:
         """
         Gets a single purchase order from Invgate and returns an InvgatePurchaseOrder object.
 
@@ -331,7 +326,7 @@ class InvgateConnection:
             InvgatePurchaseOrder: If purchase order is found.
             None: If purchase order is not found.
         """
-        if not self.validate_parameters(id, order_number):
+        if not self.validate_parameters([id, order_number]):
             print("Get Purchase Order failed: Please provide one field to get a purchase order by.")
             return None
         
@@ -349,8 +344,11 @@ class InvgateConnection:
             else:
                 print("Get Purchase Order failed: Purchase Order not found or invalid response received.")
                 return None
-        vendor = self.get_vendor(po.get("vendor")) if po.get("vendor") else None
-        return InvgatePurchaseOrder(po.get("id") if po.get("id") else 0, po.get("order_number") or "", vendor, po.get("purchase_order_type") or "", po.get("creation_date") or "", po.get("expected_delivery_date") or "", po.get("date_delivered") or "", po.get("ship_method") or "", po.get("billing_address") or "", po.get("status") or "", po.get("subtotal") if po.get("subtotal") else 0, po.get("freight") or "", po.get("handling") or "", po.get("tax") if po.get("tax") else 0, po.get("total_cost") if po.get("total_cost") else 0, po.get("cost_center") or "", po.get("contract") or "")
+        if po:
+            vendor = self.get_vendor(po.get("vendor")) if po.get("vendor") else None
+            return InvgatePurchaseOrder(po.get("id") if po.get("id") else 0, po.get("order_number") or "", vendor, po.get("purchase_order_type") or "", po.get("creation_date") or "", po.get("expected_delivery_date") or "", po.get("date_delivered") or "", po.get("ship_method") or "", po.get("billing_address") or "", po.get("status") or "", po.get("subtotal") if po.get("subtotal") else 0, po.get("freight") or "", po.get("handling") or "", po.get("tax") if po.get("tax") else 0, po.get("total_cost") if po.get("total_cost") else 0, po.get("cost_center") or "", po.get("contract") or "")
+        print("Get Purchase Order failed: Purchase Order not found.")
+        return None
 
     def get_manufacturer(self, id: int = None, name: str = None) -> InvgateManufacturer:
         """
@@ -364,19 +362,19 @@ class InvgateConnection:
             InvgateManufacturer: If manufacturer is found.
             None: If manufacturer is not found.
         """
-        if not self.validate_parameters(id, name):
+        if not self.validate_parameters([id, name]):
             print("Get Manufacturer failed: Please provide one field to get a manufacturer by.")
             return None
 
-        query: str = ""
+        manufacturer = None
         if id:
-            query = f"ids={id}"
+            response = self.get_data(endpoint_path = routes.manufacturer(id))
+            manufacturer = response if response else None
         elif name:
-            query = f"name={name}"
+            response = self.get_data(endpoint_path = routes.manufacturers(), query = f"name={name}")
+            manufacturer = response.get("results")[0] if response and response.get("results") and len(response.get("results")) == 1 else None
 
-        response = self.get_data(endpoint_path = routes.manufacturers, query = query)
-        if response and response.get("results") and len(response.get("results") == 1):
-            manufacturer = response.get("results")[0]
+        if manufacturer:
             return InvgateManufacturer(manufacturer.get("id") if manufacturer.get("id") else 0, manufacturer.get("name") or "")
         print("Get Manufacturer failed: Manufacturer not found or invalid response received.")
         return None
@@ -409,7 +407,7 @@ class InvgateConnection:
             InvgateStatus: If status is found.
             None: If status is not found.
         """
-        if not self.validate_parameters(id, name):
+        if not self.validate_parameters([id, name]):
             print("Get Status failed: Please provide one parameter to get a status by.")
             return None
         
@@ -438,7 +436,7 @@ class InvgateConnection:
             InvgateLocation: If location is found.
             None: If location is not found.
         """
-        if not self.validate_parameters(id, name):
+        if not self.validate_parameters([id, name]):
             print("Get Location failed: Please provide one field to get a location by.")
             return None
         
@@ -485,7 +483,7 @@ class InvgateConnection:
             InvgateAsset: If asset is found.
             None: If asset is not found.
         """
-        if not self.validate_parameters(id, name, serial):
+        if not self.validate_parameters([id, name, serial]):
             print("Get Asset failed: please provide one parameter to get an asset by.")
             return None
         
@@ -555,7 +553,6 @@ class InvgateConnection:
         print("Get Software failed: No results or invalid response received.")
         return None
 
-
     def get_software_for_computer(self, computer_id: int) -> list:
         """
         Gets software installations that belong to the specified asset id and returns them as InvgateSoftware objects
@@ -596,7 +593,7 @@ class InvgateConnection:
             InvgateAsset: If asset is found.
             None: If asset is not found.
         """
-        if not self.validate_parameters(id, name, serial):
+        if not self.validate_parameters([id, name, serial]):
             print("Get Asset failed: please provide one parameter to get an asset by.")
             return None
         
@@ -683,8 +680,11 @@ class InvgateConnection:
                 manager_name = None
                 manager_email = None
             if user.get("user"):
-                user_id = user.get("id")
-                username = user.get("username")
+                user_id = user.get("user").get("id")
+                username = user.get("user").get("username")
+            else:
+                user_id = None
+                username = None
                 
 
             location = temp_locations.get(user.get("location").get("id")) if user.get("location") and user.get("location").get("id") else None
@@ -891,7 +891,7 @@ class InvgateConnection:
         else:
             return None
 
-    def validate_parameters(parameters: list) -> bool:
+    def validate_parameters(self, parameters: list) -> bool:
         count_parameters: int = 0
         for parameter in parameters:
             if parameter:

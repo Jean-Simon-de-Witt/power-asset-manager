@@ -1,23 +1,9 @@
-from classes.data.fields import Fields, Field
-
 class Condition:
     def __init__(self, name: str, symbol: str):
         self.name: str = name
         self.symbol: str = symbol
         self.inverse: Condition = None
         self.apply = None
-
-    def get_applicable_fields(self) -> list[Field]:
-        fields: list[Field] = []
-        for field_name in dir(Fields):
-            if field_name.startswith("__"):
-                continue
-
-            field = getattr(Fields, field_name)
-
-            if self in field.applicable_conditions:
-                fields.append(field)
-        return fields
 
 class Conditions:
     equals: Condition = Condition(name = "equals", symbol = "==")

@@ -1,4 +1,5 @@
-class InvgateManufacturer:
+from classes.invgate.invgate_object import InvgateObject
+class InvgateManufacturer(InvgateObject):
     """
     A class for storing Invgate Manufacturer objects in memory.
     """
@@ -15,17 +16,3 @@ class InvgateManufacturer:
         """
         self.id: int = id
         self.name: str = name
-
-    def to_string(self) -> str:
-        """
-        Exports the object's properties as a formatted string.
-        
-        Arguments:
-            None:
-
-        Returns:
-            string (str): The object's properties as a formatted string.
-        """
-        string = f"ID: {self.id}\n"
-        string += f"Name: {self.name}\n"
-        return string

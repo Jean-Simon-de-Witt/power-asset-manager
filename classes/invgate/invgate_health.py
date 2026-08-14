@@ -1,4 +1,6 @@
-class InvgateHealth:
+from classes.invgate.invgate_object import InvgateObject
+
+class InvgateHealth(InvgateObject):
     """
     A class for storing Invgate Health object in memory.
     """
@@ -19,18 +21,3 @@ class InvgateHealth:
         self.updated_at: str = updated_at
         self.health_rule: str = health_rule
         self.status: str = status
-
-    def to_string(self) -> str:
-        """
-        Exports the object's properties as a formatted string.
-
-        Arguments:
-            None:
-        
-        Returns:
-            string (str): The object's properties as a formatted string.
-        """
-        string = f"Computer: {self.computer}\n"
-        string += f"Updated At: {self.updated_at}\n"
-        string += f"Health Rule: {self.health_rule}\n"
-        string += f"Status: {self.status}\n"

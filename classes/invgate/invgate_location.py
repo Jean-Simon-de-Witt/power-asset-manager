@@ -1,4 +1,5 @@
-class InvgateLocation:
+from classes.invgate.invgate_object import InvgateObject
+class InvgateLocation(InvgateObject):
     """
     A class for storing Invgate Location objects in memory.
     """
@@ -19,19 +20,4 @@ class InvgateLocation:
         self.name: str = name
         self.full_path: str = full_path
         self.description: str = description
-
-    def to_string(self) -> str:
-        """
-        Exports the object's properties as a formatted string.
-        
-        Arguments:
-            None:
-        
-        Returns:
-            string (str): The object's properties as a formatted string.
-        """
-        string = f"ID: {self.id}\n"
-        string += f"Name: {self.name}\n"
-        string += f"Full Path: {self.full_path}\n"
-        string += f"Description: {self.description}\n"
-        return string
+        self.content_type: str = content_type

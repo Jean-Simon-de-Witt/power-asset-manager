@@ -1,3 +1,4 @@
+from classes.invgate.invgate_object import InvgateObject
 from classes.invgate.invgate_status import InvgateStatus
 from classes.invgate.invgate_location import InvgateLocation
 from classes.invgate.invgate_user import InvgateUser
@@ -7,7 +8,7 @@ from classes.invgate.invgate_health import InvgateHealth
 from classes.invgate.invgate_software import InvgateSoftware
 from classes.invgate.invgate_update import InvgateUpdate
 
-class InvgateAsset:
+class InvgateAsset(InvgateObject):
     """
     A class for storing Invgate Assets in memory.
     """
@@ -42,26 +43,25 @@ class InvgateAsset:
         """
         self.id: int = id
         self.name: str = name
-        self.serial: str = serial
-        self.inventory_id:str = inventory_id
-        self.asset_physical_tag:str = asset_physical_tag
-        self.created_at: str = created_at
-        self.reported_at: str = reported_at
-        self.updated_at: str = updated_at
-        self.status: InvgateStatus = status
-        self.location: InvgateLocation = location
-        self.owner: InvgateUser = owner
-        self.finance: InvgateFinance = finance
         self.manufacturer: InvgateManufacturer = manufacturer
         self.model: str = model
         self.commercial_model: str = commercial_model
+        self.serial: str = serial
+        self.inventory_id: int = inventory_id
+        self.asset_physical_tag: str = asset_physical_tag
+        self.physical_identifier_epc: str = physical_identifier_epc
+        self.created_at: str = created_at
+        self.reported_at: str = reported_at
+        self.updated_at: str = updated_at
+        self.finance: InvgateFinance = finance
         self.asset_type: str = asset_type
+        self.asset_type_code: str = asset_type_code
+        self.owner: InvgateUser = owner
+        self.location: InvgateLocation = location
+        self.status: InvgateStatus = status
         self.default_ip: str = default_ip
         self.mac_address: str = mac_address
-        self.asset_type_code: str = asset_type_code
         self.format: str = format
-
-        self.matched_by: str = None
 
     def populate_collections(self, health: InvgateHealth = None, software: list[InvgateSoftware] = None, updates: list[InvgateUpdate] = None):
         """
@@ -87,105 +87,6 @@ class InvgateAsset:
             self.operating_system_updates: list[InvgateUpdate] = []
             for os_update in updates:
                 self.operating_system_updates.append(os_update)
-
-    def to_string(self) -> str:
-        """
-        Exports the object's properties as a formatted string.
-        
-        Arguments:
-            None:
-
-        Returns:
-            string (str): The object's properties as a formatted string.
-        """
-        string = f"ID: {self.id}\n"
-        string += f"Name: {self.name}\n"
-        string += f"Serial: {self.serial}\n"
-        string += f"Inventory ID: {self.inventory_id}\n"
-        string += f"Asset Physical Tag: {self.asset_physical_tag}\n"
-        string += f"Created At: {self.created_at}\n"
-        string += f"Reported At: {self.reported_at}\n"
-        string += f"Updated At: {self.updated_at}\n"
-
-        if self.status:
-            string += "Status:\n"
-            string += f"\tID: {self.status.id}\n"
-            string += f"\tName: {self.status.name}\n"
-            string += f"\tDescription: {self.status.description}\n"
-            string += f"\tBehavior: {self.status.behavior}\n"
-            string += f"\tIs Default: {self.status.is_default}\n"
-        else:
-            string += "Status: None\n"
-
-        if self.location:
-            string += "Location:\n"
-            string += f"\tID: {self.location.id}\n"
-            string += f"\tName: {self.location.name}\n"
-            string += f"\tFull Path: {self.location.full_path}\n"
-            string += f"\tDescription: {self.location.description}\n"
-        else:
-            string += "Location: None\n"
-
-        if self.owner:
-            string += "Owner:\n"
-            string += f"\tID: {self.owner.id}\n"
-            string += f"\tName: {self.owner.name}\n"
-            string += f"\tEmail: {self.owner.email}\n"
-            string += f"\tDate of Birth: {self.owner.date_of_birth}\n"
-            string += f"\tEmployee ID: {self.owner.employee_id}\n"
-            string += f"\tPosition: {self.owner.position}\n"
-            string += f"\tDepartment: {self.owner.department}\n"
-            string += f"\tCompany: {self.owner.company}\n"
-            string += f"\tPhone: {self.owner.phone}\n"
-            string += f"\tCellphone: {self.owner.cellphone}\n"
-            string += f"\tAddress: {self.owner.address}\n"
-            string += f"\tPerson Type: {self.owner.person_type}\n"
-            string += f"\tUser: {self.owner.user}\n"
-            string += f"\tCost Center: {self.owner.cost_center}\n"
-        else:
-            string += "Owner: None\n"
-
-        if self.finance:
-            string += "Finance:\n"
-            string += f"\tID: {self.finance.id}\n"
-            string += f"\tAsset ID: {self.finance.asset}\n"
-            string += f"\tAcquisition Type: {self.finance.acquisition_type}\n"
-            string += f"\tAcquisition Date: {self.finance.acquisition_date}\n"
-            string += f"\tAcquisition Price: {self.finance.acquisition_price}\n"
-            string += f"\tActual Price: {self.finance.actual_price}\n"
-            string += f"\tResidual Value: {self.finance.residual_value}\n"
-            string += f"\tDepreciation Percentage: {self.finance.depreciation_percentage}\n"
-            string += f"\tWarranty Date: {self.finance.warranty_date}\n"
-            string += f"\tCost Center: {self.finance.cost_center}\n"
-            string += f"\tInvoice ID: {self.finance.invoice_id}\n"
-        else:
-            string += "Finance: None\n"
-
-        if self.manufacturer:
-            string += "Manufacturer:\n"
-            string += f"\tID: {self.manufacturer.id}\n"
-            string += f"\tName: {self.manufacturer.name}\n"
-
-        else:
-            string += "Manufacturer: None\n"
-        string += f"Model: {self.model}\n"
-        string += f"Commercial Model: {self.commercial_model}\n"
-        string += f"Asset Type: {self.asset_type}\n"
-        string += f"Default IP: {self.default_ip}\n"
-        string += f"MAC Address: {self.mac_address}\n"
-        string += f"Asset Type Code: {self.asset_type_code}\n"
-        string += f"Format: {self.format}\n"
-
-        if hasattr(self, "software"):
-            string += f"Software Installed: {len(self.software)}\n"
-        else:
-            string += "Software Installed: None\n"
-
-        if hasattr(self, "operating_system_updates"):
-            string += f"Operating System Updates: {len(self.operating_system_updates)}\n"
-        else:
-            string += "Operating System Updates: None\n"
-        return string  
 
     def to_json(self, include_id: bool = False) -> dict:
         """
