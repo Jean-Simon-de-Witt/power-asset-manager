@@ -1,20 +1,17 @@
 from classes.invgate.invgate_object import InvgateObject
 class InvgateLocation(InvgateObject):
     """
-    A class for storing Invgate Location objects in memory.
+    A class for storing Invgate Location objects in memory. Inherits from the InvgateObject class.
     """
     def __init__(self, id: int, name: str, full_path: str, description: str, content_type: str):
-        """
-        Creates a new InvgateLocation object.
-        
-        Arguments:
-            name* (str): The location's name.
-            id (int): The unique identifier for each location object.
-            full_path (str): The location's full path.
-            description (str): The location's description.    
+        """Creates a new InvgateLocation object.
 
-        Returns:
-            None:
+        Args:
+            id (int): The location's ID.
+            name (str): The location's name.
+            full_path (str): The location's full path.
+            description (str): The location's description.
+            content_type (str): The location's content type.
         """
         self.id: int = id
         self.name: str = name

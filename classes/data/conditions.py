@@ -1,11 +1,23 @@
 class Condition:
+    """A class for storing conditions in memory.
+    """
     def __init__(self, name: str, symbol: str):
+        """Creates a new Condition object.
+
+        Args:
+            name (str): The condition's name.
+            symbol (str): The condition's symbol.
+        """
+        
         self.name: str = name
         self.symbol: str = symbol
         self.inverse: Condition = None
         self.apply = None
 
 class Conditions:
+    """A static class for storing predefined Condition objects.
+    """
+    
     equals: Condition = Condition(name = "equals", symbol = "==")
     not_equal_to: Condition = Condition(name = "not_equal_to", symbol = "!=")
     greater_than: Condition = Condition(name = "greater_than", symbol = ">")

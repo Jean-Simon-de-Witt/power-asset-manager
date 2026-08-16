@@ -8,7 +8,17 @@ from classes.data.collections import Collections
 from classes.data.conditions import Condition            
 
 class FilterParameter:
-    def __init__(self, filter_value, field: Field, condition: Condition, operator: str = None):
+    """A class containing a single set of filter parameters.
+    """
+    def __init__(self, filter_value: any, field: Field, condition: Condition, operator: str = None):
+        """Creates a new FilterParameter object.
+
+        Args:
+            filter_value (any): The value to be filtered by.
+            field (Field): The field to be filtered by.
+            condition (Condition): The condition to use when comparing values.
+            operator (str, optional): Used to chain filter parameters together. Defaults to None.
+        """
         if type(filter_value) == str:
             self.filter_value = filter_value.lower()
         else:
@@ -25,7 +35,15 @@ class FilterParameter:
         else:
             self.operator = "initial"
 
-    def match_asset_field(self, asset: InvgateAsset):
+    def match_asset_field(self, asset: InvgateAsset) -> bool:
+        """Compares a single field's value with the filter value.
+
+        Args:
+            asset (InvgateAsset): The asset to be filtered
+
+        Returns:
+            bool: Whether or not the field value matched with the filter value.
+        """
         match self.field:
             case Fields.serial:
                 value = asset.serial.lower() if asset.serial else ""
@@ -92,7 +110,15 @@ class FilterParameter:
                 return self.condition.apply(value, self.filter_value)
         return False
 
-    def match_user_field(self, user: InvgateUser):
+    def match_user_field(self, user: InvgateUser) -> bool:
+        """Compares a single field's value with the filter value.
+
+        Args:
+            user (InvgateUser): The user to be filtered.
+
+        Returns:
+            bool: Whether or not the field value matched with the filter value.
+        """
         match self.field:
             case Fields.employee_id:
                 value = user.employee_id.lower() if user.employee_id else ""
@@ -115,7 +141,14 @@ class FilterParameter:
         return False
 
 class FilterParameters:
+    """A class for storing multiple filter parameters.
+    """
     def __init__(self, parameters: list[FilterParameter]):
+        """Creates a new FilterParameters object.
+
+        Args:
+            parameters (list[FilterParameter]): The list of filter parameters
+        """
         self.user_parameters: list[FilterParameter] = []
         self.asset_parameters: list[FilterParameter] = []
 
@@ -138,6 +171,15 @@ class FilterParameters:
                     self.asset_parameters.append(parameter)
 
     def filter_record(self, user: InvgateUser = None, asset: InvgateAsset = None) -> bool:
+        """Filter a single record by comparing each field value with each filter value.
+
+        Args:
+            user (InvgateUser, optional): The user to be filtered. Defaults to None.
+            asset (InvgateAsset, optional): The asset to be filtered. Defaults to None.
+
+        Returns:
+            bool: Whether or not the record matches the filter parameters.
+        """
         matched: bool = True
         if user:
             for parameter in self.user_parameters:
@@ -158,9 +200,19 @@ class FilterParameters:
 
         return matched
     def get_all_parameters(self) -> list[FilterParameter]:
+        """Returns a list of all the filter parameters.
+
+        Returns:
+            list[FilterParameter]: The list of filter parameters.
+        """
         return self.user_parameters + self.asset_parameters
 
     def add_parameters(self, parameters: list[FilterParameter]) -> None:
+        """A method to add and categorise new filter parameters.
+
+        Args:
+            parameters (list[FilterParameter]): The list of filter parameters to be added.
+        """
         for parameter in parameters:
             if parameter.field.filterable:
                 if parameter.operator == "initial":

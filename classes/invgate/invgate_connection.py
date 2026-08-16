@@ -15,14 +15,19 @@ from classes.invgate.invgate_update import InvgateUpdate, InvgateOperatingSystem
 from classes.invgate.invgate_asset import InvgateAsset
 
 class InvgateConnection:
-    """
-    A class for connecting, extracting, and uploading data to and from the Invgate API.
+    """A class to connect and make requests to the Invgate API.
     """
     # ==============================================================================================
     # Init function: Initializes the connection and attempts to authenticate
     # ==============================================================================================
-    def __init__(self, domain, client_id, client_secret):
-        # Initialise variables
+    def __init__(self, domain: str, client_id: str, client_secret: str):
+        """Creates a new InvgateConnection object.
+
+        Args:
+            domain (str): The base URL for each route.
+            client_id (str): The client ID.
+            client_secret (str): The client secret.
+        """
         self.domain = domain.rstrip('/')
         self.client_id = client_id
         self.client_secret = client_secret
@@ -36,6 +41,8 @@ class InvgateConnection:
     # Authenticate function: Attempts to authenticate, returns a token if successful.
     # ==============================================================================================
     def authenticate(self):
+        """Verifies the given credentials and authenticates the connection if successful.
+        """
         auth_url = f"{self.domain}/oauth2/token/"
 
         payload = {
@@ -62,23 +69,18 @@ class InvgateConnection:
     # ==============================================================================================
     # Request Methods: General functions that interact directly to the API by sending requests.
     # ==============================================================================================
-    def get_data(self, endpoint_path: str = None, page: str = None, v1: bool = False, query: str = None, full_path: str = None):
-        """
-        Makes a GET request to the API using the authenticated session.
-        
-        Arguments:
-            endpoint_path (str): The part of the URL after the base URL. Specifies which API route to access. Ignored if full_path is also provided.
-            page (str): The page to get data from. Used when accessing paginated data.
-            v1 (bool): Refers to the version of the Invgate API. The default API version used is version 2. Set v1 to True to access certain routes that are unavailable in version 2 at the moment.
-            query (str): Specifies query parameters to include in the GET request. Parameters should be separated by & and not contain any spaces. E.g. id=10&name=john.
-            full_path (str): The full URL. This is used interchangeably with endpoint_path. endpoint_path will be ignored if this value is provided.
+    def get_data(self, endpoint_path: str = None, page: str = None, v1: bool = False, query: str = None, full_path: str = None) -> dict:
+        """Executes GET requests to the API and retrieves data in the form of a dictionary.
+
+        Args:
+            endpoint_path (str, optional): The endpoint path to fetch data from. Defaults to None.
+            page (str, optional): Used to specify the page to fetch data from. If None, data will be fetched from page 1. Defaults to None.
+            v1 (bool, optional): If True, makes a call to version 1 of the Invgate API instead of version 2. Defaults to False.
+            query (str, optional): The JSON query parameters to be passed into the request. Defaults to None.
+            full_path (str, optional): Specifies the full path to be used for the request rather than the endpoint path. Endpoint path will be ignored if specified along with this parameter. Defaults to None.
 
         Returns:
-            Dictionary (dict): If results are found, returns a dict object.
-            None: If authentication failed or GET request failed.
-
-        Raises:
-            RequestException: If the GET request failed.
+            dict: A dictionary of data from the GET request.
         """
         # Ends if not authenticated
         if not self.access_token:
@@ -119,8 +121,17 @@ class InvgateConnection:
             print(f"GET request failed for {endpoint_path}: {e}")
             return None
 
-    def post_data(self, endpoint_path, payload):
-        # End if not authenticated
+    def post_data(self, endpoint_path: str, payload: dict) -> dict:
+        """Adds a new record to Invgate using a POST request.
+
+        Args:
+            endpoint_path (str): The endpoint path for data to be posted to.
+            payload (dict): A dictionay of the values to be posted.
+
+        Returns:
+            dict: The response containing the posted object along with its newly assigned ID.
+        """
+        
         if not self.access_token:
             print("Unable to make request: Not authenticated")
             return None
@@ -148,7 +159,17 @@ class InvgateConnection:
                 print(f"Server response: {e.response.text}")
                 return None   
     
-    def patch_data(self, endpoint_path, payload):
+    def patch_data(self, endpoint_path: str, payload: dict) -> dict:
+        """Edits the specified fields of a record on Invgate by using a PATCH request.
+
+        Args:
+            endpoint_path (str): The endpoint path where data will be patched to.
+            payload (dict): A dictionary storing the data to be patched.
+
+        Returns:
+            dict: A dictionary containing the patched object with its updated values.
+        """
+        
         if not self.access_token:
             print("Unable to make request: Not authenticated")
             return None
@@ -172,40 +193,22 @@ class InvgateConnection:
                 print(f"Server response: {e.response.text}")
                 return None
 
-    def delete_data(self, endpoint_path):
-        if not self.access_token:
-            return None
-        
-        if not endpoint_path.startswith('/'):
-            endpoint_path = '/' + endpoint_path
-
-        full_url = f"{self.domain}{endpoint_path}"
-
-        try:
-            response = self.session.delete(full_url)
-
-            if response.text:
-                return response.json()
-            else:
-                return {"status": "success", "message": "Record deleted successfully"}
-        except requests.exceptions.RequestException as e:
-            print(f"DELETE request failed for {endpoint_path}: {e}")
-            return None
-
     # ===========================================================================================
     # Populate Methods: Methods to fetch data from Invgate and instantiate them as Python objects
     # ===========================================================================================
 
     def get_user(self, id: int = None, name: str = None, email: str = None, employee_id: str = None, user_username: str = None) -> InvgateUser:
-        """
-        Gets a single user from Invgate and returns an InvgateUser object.
+        """Gets a user from Invgate and returns it as an InvgateUserObject.
 
-        Arguments:
-            id* (int): The unique identifier of the user to get from Invgate.
+        Args:
+            id (int, optional): Used to get the user by ID. Defaults to None.
+            name (str, optional): Used to get the user by name. Defaults to None.
+            email (str, optional): Used to get the user by email. Defaults to None.
+            employee_id (str, optional): Used to get the user by employee ID. Defaults to None.
+            user_username (str, optional): Used to get the user by username. Defaults to None.
 
         Returns:
-            InvgateUser: If user is found.
-            None: If user is not found.
+            InvgateUser: The user returned as an InvgateUser object.
         """
 
         if not self.validate_parameters([id, name, email, employee_id, user_username]):
@@ -245,58 +248,55 @@ class InvgateConnection:
                 user_id: int = 0
                 username: str = ""
 
-            location: InvgateLocation = self.get_location(id = self.get("location")) if user.get("location") else None
+            location: InvgateLocation = self.get_location(id = user.get("location").get("id")) if user.get("location") and user.get("location").get("id") else None
 
             return InvgateUser(user.get("id") if user.get("id") else 0, user.get("name") or "", user.get("email") or "", user.get("date_of_birth") or "", user.get("employee_id") or "", user.get("position") or "", user.get("department") or "", user.get("company") or "", user.get("phone") or "", user.get("cellphone") or "", user.get("address") or "", user.get("person_type") or "", user_id, username, manager_id, manager_name, manager_email, location, user.get("cost_center") or "")
         print("Get User failed: User not found or invalid response received.")
         return None
 
     def get_finance(self, id: int) -> InvgateFinance:
+        """Gets a finance record from Invgate and returns it as an InvgateFinance object.
+
+        Args:
+            id (int): Used to get the finance by ID.
+
+        Returns:
+            InvgateFinance: The returned finance as an InvgateFinance object.
         """
-            Gets a single finance from Invgate and returns an InvgateFinance object.
-        
-            Arguments:
-                id* (int): The unique identifier of the finance to get from Invgate.
-        
-            Returns:
-                InvgateFinance: If finance is found.
-                None: If finance is not found.
-        """        
+      
         response = self.get_data(endpoint_path = routes.financial(id))
         if response:
             vendor = self.get_vendor(response.get("supplier")) if response.get("supplier") else None
-            purchase_order = self.get_purchase_order(response.get("order_id")) if response.get("order_id") else None
+            purchase_order = self.get_purchase_order(order_number = response.get("order_id")) if response.get("order_id") else None
             return InvgateFinance(response.get("id") if response.get("id") else 0, response.get("asset") if response.get("asset") else 0, response.get("acquisition_type") or "", response.get("acquisition_date") or "", response.get("acquisition_price") if response.get("acquisition_price") else 0, response.get("actual_price") if response.get("actual_price") else 0, response.get("depreciation_percentage") if response.get("depreciation_percentage") else 0, response.get("residual_value") if response.get("residual_value") else 0, response.get("warranty_date") or "", vendor, response.get("cost_center") or "", purchase_order, response.get("invoice_id") or "")
             
         print("Get Finance failed: Finance not found or invalid response received.")
         return None
 
     def get_vendor(self, id: int) -> InvgateVendor:
-        """
-        Gets a single vendor from Invgate and returns an InvgateVendor object.
+        """Gets a vendor from Invgate and returns it as an InvgateVendor object.
 
-        Arguments:
-            id* (int): The unique identifier of the vendor to get from Invgate.
+        Args:
+            id (int): Used to get the vendor by ID.
 
         Returns:
-            InvgateVendor: If vendor is found.
-            None: If vendor is not found.
-        """        
+            InvgateVendor: The returned vendor as an InvgateVendor object.
+        """
+     
         response = self.get_data(endpoint_path = routes.vendor(id))
         if response:
             return InvgateVendor(response.get("id") if response.get("id") else 0, response.get("company_name") or "", response.get("legal_name") or "", response.get("status") or "", response.get("country") or "", response.get("tax_id") or "", response.get("website") or "", response.get("address") or "", response.get("email") or "", response.get("billing_currency") or "", response.get("phone") or "", response.get("industry") or "")
         return None
 
     def get_tag(self, id: int = None, name: str = None) -> InvgateTag:
-        """
-        Gets a single tag from Invgate and returns an InvgateTag object.
+        """Gets a tag from Invgate and returns it as an InvgateTag object.
 
-        Arguments:
-            id* (int): The unique identifier of the tag to get from Invgate.
+        Args:
+            id (int, optional): Used to get the tag by ID. Defaults to None.
+            name (str, optional): Used to get the tag by name. Defaults to None.
 
         Returns:
-            InvgateTag: If tag is found.
-            None: If tag is not found.
+            InvgateTag: The returned tag as an InvgateTag object.
         """
 
         if not self.validate_parameters([id, name]):
@@ -309,22 +309,21 @@ class InvgateConnection:
             query = f"name={name}"
 
         response = self.get_data(endpoint_path = routes.tags(), query = query)
-        tag = response.get("results")[0]
         if response and response.get("results") and len(response.get("results")) == 1:
+            tag = response.get("results")[0]
             return InvgateTag(tag.get("id") if tag.get("id") else 0, tag.get("name") or "", tag.get("color") or "", tag.get("description") or "", tag.get("smart_tag") if tag.get("smart_tag") else False, tag.get("locked") if tag.get("locked") else False)
         print("Get Tag failed: Tag not found or invalid response received.")
         return None
 
     def get_purchase_order(self, id: int = None, order_number: str = None) -> InvgatePurchaseOrder:
-        """
-        Gets a single purchase order from Invgate and returns an InvgatePurchaseOrder object.
+        """Gets a purchase order from Invgate and returns it as an InvgatePurchaseOrder object.
 
-        Arguments:
-            id* (int): The unique identifier of the purchase to get from Invgate.
+        Args:
+            id (int, optional): Used to get the purchase order by ID. Defaults to None.
+            order_number (str, optional): Used to get the purchase order by order number. Defaults to None.
 
         Returns:
-            InvgatePurchaseOrder: If purchase order is found.
-            None: If purchase order is not found.
+            InvgatePurchaseOrder: The returned purchase order as an InvgatePurchaseOrder object.
         """
         if not self.validate_parameters([id, order_number]):
             print("Get Purchase Order failed: Please provide one field to get a purchase order by.")
@@ -351,16 +350,14 @@ class InvgateConnection:
         return None
 
     def get_manufacturer(self, id: int = None, name: str = None) -> InvgateManufacturer:
-        """
-        Gets a single manufacturer from Invgate and returns an InvgateManufacturer object.
+        """Gets a manufacturer from Invgate and returns it as an InvgateManufacturer object.
 
-        Arguments:
-            id (int): The unique identifier of the manufacturer to get from Invgate.
-            name (str): The name of the manufacturer to get from Invgate.
+        Args:
+            id (int, optional): Used to get the manufacturer by ID. Defaults to None.
+            name (str, optional): Used to get the manufacturer by name. Defaults to None.
 
         Returns:
-            InvgateManufacturer: If manufacturer is found.
-            None: If manufacturer is not found.
+            InvgateManufacturer: The returned manufacturer as an InvgateManufacturer object.
         """
         if not self.validate_parameters([id, name]):
             print("Get Manufacturer failed: Please provide one field to get a manufacturer by.")
@@ -380,15 +377,13 @@ class InvgateConnection:
         return None
 
     def get_health(self, computer_id: int) -> InvgateHealth:
-        """
-        Gets a single health from Invgate and returns an InvgateHealth object.
+        """Gets a health from Invgate and returns it as an InvgateHealth object.
 
-        Arguments:
-            computer_id* (int): The unique identifier of the asset to which the health belongs.
+        Args:
+            computer_id (int): Used to get the health by computer ID.
 
         Returns:
-            InvgateHealth: If health is found.
-            None: If health is not found.
+            InvgateHealth: The returned health as an InvgateHealth object.
         """
         response = self.get_data(endpoint_path = routes.health(computer_id))
         if response:
@@ -397,16 +392,16 @@ class InvgateConnection:
         return None
 
     def get_status(self, id: int = None, name: str = None) -> InvgateStatus:
-        """
-        Gets a single status from Invgate and returns an InvgateStatus object.
+        """Gets a status from Invgate and returns it as an InvgateStatus object.
 
-        Arguments:
-            id* (int): The unique identifier of the status to get from Invgate.
+        Args:
+            id (int, optional): Used to get the status by ID. Defaults to None.
+            name (str, optional): Used to get the status by name. Defaults to None.
 
         Returns:
-            InvgateStatus: If status is found.
-            None: If status is not found.
+            InvgateStatus: The returned status as an InvgateStatus object.
         """
+        
         if not self.validate_parameters([id, name]):
             print("Get Status failed: Please provide one parameter to get a status by.")
             return None
@@ -426,15 +421,14 @@ class InvgateConnection:
         return None
 
     def get_location(self, id: int = None, name: str = None) -> InvgateLocation:
-        """
-        Gets a single location from Invgate and returns an InvgateLocation object.
+        """Gets a location from Invgate and returns it as an InvgateLocation object.
 
-        Arguments:
-            id* (int): The unique identifier of the location to get from Invgate.
+        Args:
+            id (int, optional): Used to get the location by ID. Defaults to None.
+            name (str, optional): Used to get the location by name. Defaults to None.
 
         Returns:
-            InvgateLocation: If location is found.
-            None: If location is not found.
+            InvgateLocation: The returned location as an InvgateLocation object.
         """
         if not self.validate_parameters([id, name]):
             print("Get Location failed: Please provide one field to get a location by.")
@@ -453,15 +447,13 @@ class InvgateConnection:
         return None
 
     def get_software(self, id: int) -> InvgateSoftware:
-        """
-        Gets a single software from Invgate and returns an InvgateSoftware object.
+        """Gets a software record from Invgate and returns it as an InvgateLocation object.
 
-        Arguments:
-            id* (int): The unique identifier of the software to get from Invgate.
+        Args:
+            id (int): Used to get the software by ID.
 
         Returns:
-            InvgateSoftware: If software is found.
-            None: If software is not found.
+            InvgateSoftware: The returned software as an InvgateSoftware object.
         """
         response = self.get_data(endpoint_path = routes.software(id))
         if response:
@@ -472,16 +464,15 @@ class InvgateConnection:
         print("Get Software failed: Software not found or invalid response received.")
 
     def get_asset(self, id: int = None, name: str = None, serial: str = None) -> InvgateAsset:
-        """
-        Gets a single asset from Invgate and returns an InvgateAsset object.
-        
-        Arguments:
-            id (int): The unique identifier of the asset to get from Invgate.
-            name (str): The name of the asset to get from Invgate.
+        """Gets an asset from Invgate and returns it as an InvgateAsset object.
+
+        Args:
+            id (int, optional): Used to get the asset by ID. Defaults to None.
+            name (str, optional): Used to get the asset by name. Defaults to None.
+            serial (str, optional): Used to get the asset by serial. Defaults to None.
 
         Returns:
-            InvgateAsset: If asset is found.
-            None: If asset is not found.
+            InvgateAsset: The returned asset as an InvgateAsset object.
         """
         if not self.validate_parameters([id, name, serial]):
             print("Get Asset failed: please provide one parameter to get an asset by.")
@@ -511,15 +502,13 @@ class InvgateConnection:
         return None
 
     def get_update(self, id: int) -> InvgateUpdate:
-        """
-        Gets a single operating system update from Invgate and returns an InvgateOperatingSystemUpdate object.
+        """Gets an updated from Invgate and returns it as an InvgateUpdate object.
 
-        Arguments:
-            id* (int): The unique identifier of the operating system update to get from Invgate.
+        Args:
+            id (int): Used to get the update by ID.
 
         Returns:
-            InvgateOperatingSystemUpdate: If operating system update is found.
-            None: If operating system update is not found.
+            InvgateUpdate: The returned update as an InvgateUpdate object.
         """
         response = self.get_data(endpoint_path = routes.operating_system_update(id))
         if response:
@@ -530,14 +519,15 @@ class InvgateConnection:
         return None
 
     def get_updates_for_computer(self, computer_id: int) -> dict:
-        """
-        Gets all operating system updates that belong to the specified asset id and returns them as InvgateOperatingSystemUpdate objects
-        Arguments:
-            computer_id* (int): The unique identifier of the asset that the operating system updates belong to. 
+        """Gets all updates belonging to an asset and returns them as InvgateUpdate objects.
+
+        Args:
+            computer_id (int): The asset's ID.
+
         Returns:
-            dict[int, list[InvgateOperatingSystemUpdate]]: If operating system updates are found.
-            None: If no operating system updates are found.
+            dict: A dictionary containing the count of updates and a list of InvgateUpdate objects.
         """
+        
         response = self.get_all_pages(self.get_data(endpoint_path = routes.operating_system_updates(), query = f"asset_id={computer_id}"))
         if response and response.get("data"):
             results = {}
@@ -553,17 +543,18 @@ class InvgateConnection:
         print("Get Software failed: No results or invalid response received.")
         return None
 
-    def get_software_for_computer(self, computer_id: int) -> list:
-        """
-        Gets software installations that belong to the specified asset id and returns them as InvgateSoftware objects
-        Arguments:
-            computer_id* (int): The unique identifier of the asset that the software installations belong to. 
+    def get_software_for_computer(self, computer_id: int) -> dict:
+        """Gets all software belonging to an asset and returns them as InvgateSoftware objects.
+
+        Args:
+            computer_id (int): The asset's ID.
+
         Returns:
-            dict[int, list[InvgateSoftware]]: If software installations are found.
-            None: If no software installations are found.
+            dict: A dictionary containing the count of software and a list of InvgateSoftware objects.
         """
+        
         response = self.get_all_pages(self.get_data(endpoint_path = routes.manufacturers()))
-        manufacturers: dict[InvgateManufacturer] = {}
+        manufacturers: dict[int, InvgateManufacturer] = {}
         if response and response.get("data"):
             for manufacturer in response.get("data"):
                 manufacturers[manufacturer.get("id")] = InvgateManufacturer(manufacturer.get("id"), manufacturer.get("name"))
@@ -576,23 +567,24 @@ class InvgateConnection:
             softwares = response.get("data")
 
             for software in softwares:
-                manufacturer: InvgateManufacturer = manufacturers.get(software.get("version").get("program").get("manufacturer").get("id")) if software.get("version") and software.get("version").get("program") and software.get("version").get("program").get("manufacturer") and manufacturers.get(software.get("version").get("program").get("manufacturer")) else None
+                manufacturer: InvgateManufacturer = manufacturers.get(software.get("version").get("program").get("manufacturer").get("id")) if software.get("version") and software.get("version").get("program") and software.get("version").get("program").get("manufacturer") and manufacturers.get(software.get("version").get("program").get("manufacturer").get("id")) else None
                 program: InvgateProgram = InvgateProgram(software.get("version").get("program").get("name") or "", software.get("version").get("program").get("license") or "", software.get("version").get("program").get("category") or "", software.get("version").get("program").get("types") or "", software.get("version").get("program").get("types_key") or "", software.get("version").get("program").get("tags") or "", software.get("version").get("program").get("is_metering_enabled"), manufacturer) if software.get("version") and software.get("version").get("program") else None
                 version: InvgateVersion = InvgateVersion(software.get("version").get("version") or "", software.get("version").get("internal_version") or "", software.get("version").get("edition") or "", program) if software.get("version") else None
-            return InvgateSoftware(software.get("id") if software.get("id") else 0, software.get("resource_type") or "", software.get("install_date") or "", software.get("install_path") or "", software.get("uninstall_call") or "", software.get("computer") if software.get("computer") else 0, version) if software.get("version") and software.get("version").get("program") and software.get("version").get("program").get("manufacturer") else None
+                results["software"].append(InvgateSoftware(software.get("id") if software.get("id") else 0, software.get("resource_type") or "", software.get("install_date") or "", software.get("install_path") or "", software.get("uninstall_call") or "", software.get("computer") if software.get("computer") else 0, version))
+            return results
 
     def get_asset_with_collections(self, id: int = None, name: str = None, serial: str = None) -> InvgateAsset:
-        """
-        Gets a single asset from Invgate along with its collections and returns an InvgateAsset object.
-        
-        Arguments:
-            id (int): The unique identifier of the asset to get from Invgate.
-            name (str): The name of the asset to get from Invgate.
+        """Gets an asset from Invgate with its health, software, and updates and returns it as an InvgateAsset object.
+
+        Args:
+            id (int, optional): Used to get the asset by ID. Defaults to None.
+            name (str, optional): Used to get the asset by name. Defaults to None.
+            serial (str, optional): Used to get the asset by serial. Defaults to None.
 
         Returns:
-            InvgateAsset: If asset is found.
-            None: If asset is not found.
+            InvgateAsset: The returned asset as an InvgateAsset object.
         """
+        
         if not self.validate_parameters([id, name, serial]):
             print("Get Asset failed: please provide one parameter to get an asset by.")
             return None
@@ -621,44 +613,49 @@ class InvgateConnection:
             health: InvgateHealth = self.get_health(asset.get("id"))
             software: list[InvgateSoftware] = self.get_software_for_computer(asset.get("id"))
             updates: list[InvgateUpdate] = self.get_updates_for_computer(asset.get("id"))
-            asset_object.populate_collections(health = health, software = software, updates = updates)
+            asset_object.populate_collections(health = health if health else None, software = software.get("software") if software else None, updates = updates.get("updates") if updates else None)
         print("Get Asset failed: Asset not found or invalid response received.")
         return None
                 
     def load_data(self) -> dict:
+        """A bulk method that loads all data from Invgate as a dictionary containing lists of each relevant object.
+
+        Returns:
+            dict: The dictionary that contains the data. Contains a list of InvgateUser objects and a list of InvgateAsset objects.
+        """
 
         results = {}
 
         # Vendors
-        temp_vendors = {}
+        temp_vendors: dict[int, InvgateVendor] = {}
         response = self.get_all_pages(self.get_data(endpoint_path = routes.vendors()))
         for vendor in response.get("data"):
             temp_vendors[vendor.get("id")] = InvgateVendor(vendor.get("id") if vendor.get("id") else 0, vendor.get("company_name") or "", vendor.get("legal_name") or "", vendor.get("status") or "", vendor.get("tax_id") or "", vendor.get("country") or "", vendor.get("website") or "", vendor.get("address") or "", vendor.get("email") or "", vendor.get("billing_currency") or "", vendor.get("phone") or "", vendor.get("industry") or "")
 
         # Manufacturers
-        temp_manufacturers = {}
+        temp_manufacturers: dict[str, InvgateManufacturer] = {}
         response = self.get_all_pages(self.get_data(endpoint_path = routes.manufacturers()))
         for manufacturer in response.get("data"):
             temp_manufacturers[manufacturer.get("name")] = InvgateManufacturer(manufacturer.get("id") if manufacturer.get("id") else 0, manufacturer.get("name") or "")
 
         # Locations
-        temp_locations = {}
+        temp_locations: dict[int, InvgateLocation] = {}
         response = self.get_all_pages(self.get_data(endpoint_path = routes.locations(), v1 = True))
         for location in response.get("data"):
             temp_locations[location.get("id")] = InvgateLocation(location.get("id") if location.get("id") else 0, location.get("attributes").get("name") or "", location.get("attributes").get("full_path") or "", location.get("attributes").get("description") or "", location.get("attributes").get("content_type") or "")
         # Statuses
-        temp_statuses = {}
+        temp_statuses: dict[int, InvgateStatus] = {}
         response = self.get_all_pages(self.get_data(endpoint_path = routes.status(), v1 = True))
         for status in response.get("data"):
             temp_statuses[status.get("id")] = InvgateStatus(status.get("id") if status.get("id") else 0, status.get("attributes").get("name") or "", status.get("attributes").get("description") or "", status.get("attributes").get("behavior") or "", status.get("attributes").get("is_default") if status.get("attributes").get("is_default") else False)
         # Purchase Orders
-        temp_purchase_orders = {}
+        temp_purchase_orders: dict[str, InvgatePurchaseOrder] = {}
         response = self.get_all_pages(self.get_data(endpoint_path = routes.purchase_orders()))
         for po in response.get("data"):
             vendor = temp_vendors.get(po.get("vendor")) if po.get("vendor") else None
             temp_purchase_orders[po.get("order_number")] = InvgatePurchaseOrder(po.get("id") if po.get("id") else 0, po.get("order_number") or "", vendor, po.get("purchase_order_type") or "", po.get("creation_date") or "", po.get("expected_delivery_date") or "", po.get("date_delivered") or "", po.get("ship_method") or "", po.get("billing_address") or "", po.get("status") or "", po.get("subtotal") if po.get("subtotal") else 0, po.get("freight") or "", po.get("handling") or "", po.get("tax") if po.get("tax") else 0, po.get("total_cost") if po.get("total_cost") else 0, po.get("cost_center") or "", po.get("contract") or "")
         # Finance
-        temp_finance = {}
+        temp_finance: dict[int, InvgateFinance] = {}
         response = self.get_all_pages(self.get_data(endpoint_path = routes.financials()))
         for finance in response.get("data"):
             vendor = temp_vendors.get(finance.get("vendor")) if finance.get("vendor") else None
@@ -668,7 +665,7 @@ class InvgateConnection:
 
         # Users
         response = self.get_all_pages(self.get_data(endpoint_path = routes.users_detail()))
-        temp_users = {}
+        temp_users: dict[int, InvgateUser] = {}
         results["users"] = []
         for user in response.get("data"):
             if user.get("manager"):
@@ -684,11 +681,11 @@ class InvgateConnection:
                 username = user.get("user").get("username")
             else:
                 user_id = None
-                username = None
-                
+                username = None                
 
             location = temp_locations.get(user.get("location").get("id")) if user.get("location") and user.get("location").get("id") else None
             user_object = InvgateUser(user.get("id") if user.get("id") else 0, user.get("name") or "", user.get("email") or "", user.get("date_of_birth") or "", user.get("employee_id") or "", user.get("position") or "", user.get("department") or "", user.get("company") or "", user.get("phone") or "", user.get("cellphone") or "", user.get("address") or "", user.get("person_type") or "", user_id, username, manager_id, manager_name, manager_email, location, user.get("cost_center") or "")
+            temp_users[user_object.id] = user_object
             results["users"].append(user_object)
 
         # Assets
@@ -710,72 +707,54 @@ class InvgateConnection:
     # =============================================================================================
 
     def create_asset(self, asset: InvgateAsset) -> InvgateAsset:
-        """
-        Creates a new asset in Invgate using the data from an InvgateAsset object.
-        
-        Arguments:
-            asset* (InvgateAsset): The InvgateAsset object to create in Invgate.
+        """Creates a new asset in Invgate.
+
+        Args:
+            asset (InvgateAsset): The asset to be created.
 
         Returns:
-            InvgateAsset: If asset is created successfully.
-            None: If asset is not created successfully.
+            InvgateAsset: The created asset along with its newly assigned ID.
         """
+        
         response = self.post_data(endpoint_path = routes.assets(), payload = asset.to_json())
 
-        if response["id"]:
-            if response["status"]:
-                status = self.get_status(id = response.get("status"))
-            else:
-                status = None
+        if response.get("id"):
+            status: InvgateStatus = self.get_status(id = response.get("status")) if response.get("status") else None
+            location: InvgateLocation = self.get_location(id = response.get("location")) if response.get("location") else None
+            owner: InvgateUser = self.get_user(id = response.get("owner")) if response.get("owner") else None
+            finance: InvgateFinance = self.get_finance(id = response.get("finance")) if response.get("finance") else None
+            manufacturer: InvgateManufacturer = self.get_manufacturer(id = response.get("manufacturer")) if response.get("manufacturer") else None
 
-            if response["location"]:
-                location = self.get_location(id = response.get("location"))
-            else:
-                location = None
-
-            if response["owner"]:
-                owner = self.get_user(id = response.get("owner"))
-            else:
-                owner = None
-
-            if response["finance"]:
-                finance = self.get_finance(id = response.get("finance"))
-            else:
-                finance = None
-
-            if response["manufacturer"]:
-                manufacturer = self.get_manufacturer(name = response.get("manufacturer"))
-            else:
-                manufacturer = None
-
-            return InvgateAsset(name = response.get("name"), id = response.get("id"), serial = response.get("serial"), inventory_id = response.get("inventory_id"), asset_physical_tag = response.get("asset_physical_tag"), created_at = response.get("created_at"), reported_at = response.get("reported_at"), updated_at = response.get("updated_at"), status = status, location = location, owner = owner, finance = finance, manufacturer = manufacturer, model = response.get("model"), commercial_model = response.get("commercial_model"), asset_type = response.get("asset_type"), default_ip = response.get("default_ip"), mac_address = response.get("mac_address"), asset_type_code = response.get("asset_type_code"), format = response.get("format"))
+            return InvgateAsset(response.get("id"), response.get("name") or "", manufacturer, response.get("model") or "", response.get("commercial_model") or "", response.get("serial") or "", response.get("inventory_id") or "", response.get("asset_physical_tag") or "", response.get("physical_identifier_epc") or "", response.get("created_at") or "", response.get("reported_at") or "", response.get("updated_at") or "", finance, response.get("asset_type") or "", response.get("asset_type_code") or "", owner, location, status, response.get("default_ip") or "", response.get("mac_address") or "", response.get("format") or "")
+        return None
 
     def create_user(self, user: InvgateUser) -> InvgateUser:
-        """
-        Creates a new user in Invgate using the data from an InvgateUser object.
-        
-        Arguments:
-            user* (InvgateUser): The InvgateUser object to create in Invgate.
+        """Creates a new user in Invgate.
+
+        Args:
+            user (InvgateUser): The user to be created.
 
         Returns:
-            InvgateUser: If user is created successfully.
-            None: If user is not created successfully.
+            InvgateUser: The created user along with its newly assigned ID.
         """
         response = self.post_data(endpoint_path = routes.users(), payload = user.to_json())
 
-        if response["id"]:
-            if response["manager"]:
-                manager = self.get_user(id = response.get("manager"))
+        if response.get("id"):
+            manager = self.get_user(id = response.get("manager")) if response.get("manager") else None
+            if manager:
+                manager_id = manager.id
+                manager_name = manager.name
+                manager_email = manager.email
+                
+            location = self.get_location(id = response.get("location")) if response.get("location") else None
+            if response.get("user"):
+                user_id = response.get("user").get("id")
+                username = response.get("user").get("username")
             else:
-                manager = None
+                user_id = 0
+                username = ""
 
-            if response["location"]:
-                location = self.get_location(id = response.get("location"))
-            else:
-                location = None
-
-            return InvgateUser(id = response.get("id"), name = response.get("name"), email = response.get("email"), date_of_birth = response.get("date_of_birth"), employee_id = response.get("employee_id"), position = response.get("position"), department = response.get("department"), company = response.get("company"), phone = response.get("phone"), cellphone = response.get("cellphone"), address = response.get("address"), person_type = response.get("person_type"), user = response.get("user"), manager = manager, location = location, cost_center = response.get("cost_center"))
-        print(response)
+            return InvgateUser(response.get("id"), response.get("name") or "", response.get("email") or "", response.get("date_of_birth") or "", response.get("employee_id"), response.get("position"), response.get("department") or "", response.get("company") or "", response.get("phone") or "", response.get("cellphone") or "", response.get("address") or "", response.get("person_type") or "", user_id, username, manager_id, manager_name, manager_email, location, response.get("cost_center") or None)
         return None
 
     # ==================================================================================================
@@ -783,82 +762,71 @@ class InvgateConnection:
     # ==================================================================================================
 
     def update_asset(self, asset: InvgateAsset) -> InvgateAsset:
-        """
-        Updates an existing asset in Invgate using the data from an InvgateAsset object.
-        
-        Arguments:
-            asset* (InvgateAsset): The InvgateAsset object to update in Invgate.
-            
+        """Updates the specified data of an existing asset in Invgate.
+
+        Args:
+            asset (InvgateAsset): The asset to be edited.
+
         Returns:
-            InvgateAsset: If asset is updated successfully.
-            None: If asset is not updated successfully.    
+            InvgateAsset: The edited asset with its updated values.
         """
         response = self.patch_data(endpoint_path = routes.asset(asset.id), payload = asset.to_json())
 
-        if response["id"]:
-            if response["status"]:
-                status = self.get_status(id = response.get("status"))
-            else:
-                status = None
+        if response.get("id"):
+            status: InvgateStatus = self.get_status(id = response.get("status")) if response.get("status") else None
+            location: InvgateLocation = self.get_location(id = response.get("location")) if response.get("location") else None
+            owner: InvgateUser = self.get_user(id = response.get("owner")) if response.get("owner") else None
+            finance: InvgateFinance = self.get_finance(id = response.get("finance")) if response.get("finance") else None
+            manufacturer: InvgateManufacturer = self.get_manufacturer(id = response.get("manufacturer")) if response.get("manufacturer") else None
 
-            if response["location"]:
-                location = self.get_location(id = response.get("location"))
-            else:
-                location = None
-
-            if response["owner"]:
-                owner = self.get_user(id = response.get("owner"))
-            else:
-                owner = None
-
-            if response["finance"]:
-                finance = self.get_finance(id = response.get("finance"))
-            else:
-                finance = None
-
-            if response["manufacturer"]:
-                manufacturer = self.get_manufacturer(name = response.get("manufacturer"))
-            else:
-                manufacturer = None
-
-            return InvgateAsset(name = response.get("name"), id = response.get("id"), serial = response.get("serial"), inventory_id = response.get("inventory_id"), asset_physical_tag = response.get("asset_physical_tag"), created_at = response.get("created_at"), reported_at = response.get("reported_at"), updated_at = response.get("updated_at"), status = status, location = location, owner = owner, finance = finance, manufacturer = manufacturer, model = response.get("model"), commercial_model = response.get("commercial_model"), asset_type = response.get("asset_type"), default_ip = response.get("default_ip"), mac_address = response.get("mac_address"), asset_type_code = response.get("asset_type_code"), format = response.get("format"))
-        else:
-            print(response)
-            return None
+            return InvgateAsset(response.get("id"), response.get("name") or "", manufacturer, response.get("model") or "", response.get("commercial_model") or "", response.get("serial") or "", response.get("inventory_id") or "", response.get("asset_physical_tag") or "", response.get("physical_identifier_epc") or "", response.get("created_at") or "", response.get("reported_at") or "", response.get("updated_at") or "", finance, response.get("asset_type") or "", response.get("asset_type_code") or "", owner, location, status, response.get("default_ip") or "", response.get("mac_address") or "", response.get("format") or "")
+        return None
 
     def update_user(self, user: InvgateUser) -> InvgateUser:
-        """
-        Updates an existing user in Invgate using the data from an InvgateUser object.
+        """Updates the specified data of an existing asset in Invgate.
 
-        Arguments:
-            user* (InvgateUser): The InvgateUser object to update in Invgate.
+        Args:
+            user (InvgateUser): The user to be edited.
 
         Returns:
-            InvgateUser: If user is updated successfully.
-            None: If user is not updated successfully.
+            InvgateUser: The edited user with its updated values.
         """
         response = self.patch_data(endpoint_path = routes.user(user.id), payload = user.to_json())
 
-        if response["id"]:
-            if response["manager"]:
-                manager = self.get_user(id = response.get("manager"))
+        if response.get("id"):
+            manager = self.get_user(id = response.get("manager")) if response.get("manager") else None
+            if manager:
+                manager_id = manager.id
+                manager_name = manager.name
+                manager_email = manager.email
             else:
-                manager = None
-
-            if response["location"]:
-                location = self.get_location(id = response.get("location"))
+                manager_id = 0
+                manager_name = ""
+                manager_email = ""
+                
+            location = self.get_location(id = response.get("location")) if response.get("location") else None
+            if response.get("user"):
+                user_id = response.get("user").get("id")
+                username = response.get("user").get("username")
             else:
-                location = None
+                user_id = 0
+                username = ""
 
-            return InvgateUser(name = response.get("name"), email = response.get("email"), id = response.get("id"), date_of_birth = response.get("date_of_birth"), employee_id = response.get("employee_id"), position = response.get("position"), department = response.get("department"), company = response.get("company"), phone = response.get("phone"), cellphone = response.get("cellphone"), address = response.get("address"), person_type = response.get("person_type"), user = response.get("user"), manager = manager, location = location, cost_center = response.get("cost_center"))
-        else:
-            print(response)
-            return None
+            return InvgateUser(response.get("id"), response.get("name") or "", response.get("email") or "", response.get("date_of_birth") or "", response.get("employee_id"), response.get("position"), response.get("department") or "", response.get("company") or "", response.get("phone") or "", response.get("cellphone") or "", response.get("address") or "", response.get("person_type") or "", user_id, username, manager_id, manager_name, manager_email, location, response.get("cost_center") or None)
+        return None
 
 # ================================================
 # Helper Functions
 # ================================================
     def get_all_pages(self, response: dict) -> dict:
+        """A helper function to get all paginated values for a GET request.
+
+        Args:
+            response (dict): The response returned from get_data().
+
+        Returns:
+            dict: A dictionary of the data stored as dictionaries.
+        """
         if response:
             results: dict = {}
             results["data"] = []
@@ -873,17 +841,25 @@ class InvgateConnection:
                         break
                     else:
                         response = self.get_data(full_path = response.get("next"))
+                        
+                        if not response:
+                            break
             elif response.get("data"):
-                results["count"] = len(response.get("data"))
+                results["count"] = 0
                 while True:
+                    results["count"] += len(response.get("data"))
                     results["data"].extend(response.get("data"))
 
-                    if not response.get("links").get("next"):
+                    links = response.get("links") if response.get("links") else {}
+                    if not links.get("next") or links.get("next") == "None":
                         break
-                    elif response.get("next") == "None":
+                    elif links.get("next") == "None":
                         break
                     else:
-                        response = self.get_data(full_path = response.get("next"))
+                        response = self.get_data(full_path = links.get("next"))
+                        
+                        if not response:
+                            break
             else:
                 return response
 
@@ -892,6 +868,14 @@ class InvgateConnection:
             return None
 
     def validate_parameters(self, parameters: list) -> bool:
+        """A helper function used to validate whether or not the correct number of parameters were specified for a method.
+
+        Args:
+            parameters (list): All possible parameters for the function.
+
+        Returns:
+            bool: Whether or not the correct number of parameters were specified.
+        """
         count_parameters: int = 0
         for parameter in parameters:
             if parameter:

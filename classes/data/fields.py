@@ -1,18 +1,39 @@
 from classes.data.conditions import Conditions, Condition
 class Field:
+    """A class for storing fields in memory.
+    """
     def __init__(self, name: str, applicable_conditions: list[Condition], searchable: bool, filterable: bool, orderable: bool):
+        """Creates a new Field object.
+
+        Args:
+            name (str): The field's name.
+            applicable_conditions (list[Condition]): A list of conditions applicable to the field.
+            searchable (bool): Whether or not the field can be searched.
+            filterable (bool): Whether or not the field can be filtered.
+            orderable (bool): Whether or not the field can be ordered.
+        """
         self.name: str = name
         self.applicable_conditions: list[Condition] = applicable_conditions
         self.searchable: bool = searchable
         self.filterable: bool = filterable
         self.orderable: bool = orderable
 
-    def is_applicable(self, condition: Condition):
+    def is_applicable(self, condition: Condition) -> bool:
+        """Checks if a condition is applicable to the field.
+
+        Args:
+            condition (Condition): The condition to be checked.
+
+        Returns:
+            bool: Whether or not the condition is applicable to the field.
+        """
         if condition in self.applicable_conditions:
             return True
         return False
 
 class Fields:
+    """A static class for storing predefined Field objects.
+    """
     user_name: Field = Field(name = "user_name", applicable_conditions = [], searchable = True, filterable = False, orderable = True)
     email: Field = Field(name = "email", applicable_conditions = [], searchable = True, filterable = False, orderable = True)
     employee_id: Field = Field(name = "employee_id", applicable_conditions = [], searchable = True, filterable = False, orderable = True)
