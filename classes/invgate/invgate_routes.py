@@ -19,6 +19,9 @@ class InvgateRoutes:
     
     def asset(id):
         return f"/public-api/v2/assets-lite/{id}/"
+    
+    def computer(id):
+      return f"/public-api/v2/computers/{id}/"  
 
     def vendors():
         return "/public-api/v2/vendors/"

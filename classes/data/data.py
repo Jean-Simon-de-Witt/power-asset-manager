@@ -147,7 +147,7 @@ class FilterParameters:
         """Creates a new FilterParameters object.
 
         Args:
-            parameters (list[FilterParameter]): The list of filter parameters
+            parameters (list[FilterParameter]): The list of filter parameters.
         """
         self.user_parameters: list[FilterParameter] = []
         self.asset_parameters: list[FilterParameter] = []
@@ -224,13 +224,29 @@ class FilterParameters:
                    self.user_parameters.append(parameter) 
 
 class SearchParameter:
+    """A class containing a single set of search parameters.
+    """
     def __init__(self, search_phrase: str, field_to_search: Field):
+        """Creates a new SearchParameter object.
+
+        Args:
+            search_phrase (str): The phrase entered to search by.
+            field_to_search (Field): The field to search by.
+        """
         self.tags: list[str] = search_phrase.split()
         self.field: Field = None
         if field_to_search.searchable:
             self.field = field_to_search
 
     def match_asset_field(self, asset: InvgateAsset) -> bool:
+        """Compares a single field's value with the search tags.
+
+        Args:
+            asset (InvgateAsset): The asset to be checked.
+
+        Returns:
+            bool: Whether or not the asset's specified field contains all tags.
+        """
         asset_name = asset.name.lower() if asset.name else ""
         owner_name = asset.owner.name.lower() if asset.owner and asset.owner.name else ""
         model = asset.model.lower() if asset.model else ""
@@ -248,6 +264,14 @@ class SearchParameter:
             case _:
                 return False
     def match_user_field(self, user: InvgateUser) -> bool:
+        """Compares a single field's value with the search tags.
+
+        Args:
+            user (InvgateUser): The user to be checked.
+
+        Returns:
+            bool: Whether or not the user's specified field contains all tags.
+        """
         user_name = user.name.lower() if user.name else ""
         email = user.email.lower() if user.email else ""
         employee_id = user.employee_id.lower() if user.employee_id else ""
@@ -263,7 +287,13 @@ class SearchParameter:
                 return False
 
 class SearchParameters:
+    """A class for storing multiple search parameters."""
     def __init__(self, parameters: list[SearchParameter]):
+        """Creates a new SearchParameters object.
+
+        Args:
+            parameters (list[SearchParameter]): The list of search parameters.
+        """
         self.asset_parameters: list[SearchParameter] = []
         self.user_parameters: list[SearchParameter] = []
 
@@ -275,6 +305,15 @@ class SearchParameters:
                     self.user_parameters.append(parameter)
         
     def search_record(self, asset: InvgateAsset = None, user: InvgateUser = None) -> bool:
+        """Search a single record by comparing each field with each search tag.
+
+        Args:
+            asset (InvgateAsset, optional): The asset to be searched. Defaults to None.
+            user (InvgateUser, optional): The user to be searched. Defaults to None.
+
+        Returns:
+            bool: Whether or not each specified field of the record matches all search tags.
+        """
         if asset:
             for parameter in self.asset_parameters:
                 if parameter.match_asset_field(asset):
@@ -287,9 +326,19 @@ class SearchParameters:
         return False
 
     def get_all_parameters(self) -> list[SearchParameter]:
+        """Returns a list of all the search parameters.
+
+        Returns:
+            list[SearchParameter]: The list of filter parameters.
+        """
         return self.user_parameters + self.asset_parameters
 
     def add_parameters(self, parameters: list[SearchParameter]) -> None:
+        """A method to add and categorise new search parameters.
+
+        Args:
+            parameters (list[SearchParameter]): The list of search parameters to be added.
+        """
         for parameter in parameters:
             if parameter.field.searchable:
                 if parameter.field.contained_within(Collections.assets):
@@ -298,7 +347,15 @@ class SearchParameters:
                     self.user_parameters.append(parameter)
 
 class OrderParameter:
+    """A class containing a single set of order parameters.
+    """
     def __init__(self, field: Field, direction: str):
+        """Creates a new OrderParameter object.
+
+        Args:
+            field (Field): The field to be ordered.
+            direction (str): The sorting direction - ascending or descending.
+        """
         self.field: Field = None
 
         if field.orderable:
@@ -312,6 +369,14 @@ class OrderParameter:
             self.reversed = True
 
     def sort_assets_by_field(self, assets: list[InvgateAsset]):
+        """Sorts assets by the specified field.
+
+        Args:
+            assets (list[InvgateAsset]): The list of assets to sort.
+
+        Returns:
+            _type_: The sorted list of assets.
+        """
         if self.field:
             match self.field:
                 case Fields.asset_name:
@@ -347,6 +412,14 @@ class OrderParameter:
         return assets
 
     def sort_users_by_field(self, users: list[InvgateUser]):
+        """Sorts users by the specified field.
+
+        Args:
+            users (list[InvgateUser]): The list of users to sort.
+
+        Returns:
+            _type_: The sorted list of users.
+        """
         if self.field:
             match self.field:
                 case Fields.user_name:
@@ -362,7 +435,14 @@ class OrderParameter:
         return users
 
 class OrderParameters:
+    """A class for storing multiple order parameters.
+    """
     def __init__(self, parameters: list[OrderParameter]):
+        """Creates a new OrderParameter object.
+
+        Args:
+            parameters (list[OrderParameter]): The list of order parameters.
+        """
         self.asset_parameters: list[OrderParameter] = []
         self.user_parameters: list[OrderParameter] = []
 
@@ -374,6 +454,15 @@ class OrderParameters:
                     self.user_parameters.append(parameter)
 
     def sort_collections(self, assets: list[InvgateAsset], users: list[InvgateUser]):
+        """Sorts the given list of assets and users.
+
+        Args:
+            assets (list[InvgateAsset]): The list of assets to be sorted.
+            users (list[InvgateUser]): The list of users to be sorted.
+
+        Returns:
+            _type_: _description_
+        """
         results = {}
         results["users"] = []
         results["assets"] = []
@@ -391,9 +480,19 @@ class OrderParameters:
         return results
 
     def get_all_parameters(self) -> list[OrderParameter]:
+        """Returns a list of all the order parameters.
+
+        Returns:
+            list[OrderParameter]: The list of order parameters.
+        """
         return self.user_parameters + self.asset_parameters
 
     def add_parameters(self, parameters: list[OrderParameter]) -> None:
+        """A method to add and categorise new order parameters.
+
+        Args:
+            parameters (list[OrderParameter]): The list of order parameters to be added.
+        """
         for parameter in parameters:
             if parameter.field.orderable:
                 if Collections.assets.contains_field(parameter.field):
@@ -402,27 +501,68 @@ class OrderParameters:
                     self.user_parameters.append(parameter)
 
 class QueryParameters:
+    """A class for storing search parameters, filter parameters, and order parameters.
+    """
     def __init__(self, search_parameters: SearchParameters = None, filter_parameters: FilterParameters = None, order_parameters: OrderParameters = None):
+        """Creates a new QueryParameters object.
+
+        Args:
+            search_parameters (SearchParameters, optional): The search parameters. Defaults to None.
+            filter_parameters (FilterParameters, optional): The filter parameters. Defaults to None.
+            order_parameters (OrderParameters, optional): The order parameters. Defaults to None.
+        """
         self.search_parameters: SearchParameters = search_parameters or SearchParameters(parameters = [])
         self.filter_parameters: FilterParameters = filter_parameters or FilterParameters(parameters = [])
         self.order_parameters: OrderParameters = order_parameters or OrderParameters(parameters = [])
 
     def add_search_parameters(self, search_parameters: list[SearchParameter]) -> None:
+        """A method to add search parameters.
+
+        Args:
+            search_parameters (list[SearchParameter]): The list of search parameters to be added.
+        """
         self.search_parameters.add_parameters(search_parameters)
 
     def add_filter_parameters(self, filter_parameters: list[FilterParameter]) -> None:
+        """A method to add filter parameters.
+
+        Args:
+            filter_parameters (list[FilterParameter]): The list of filter parameters to be added.
+        """
         self.filter_parameters.add_parameters(filter_parameters)
 
     def add_order_parameters(self, order_parameters: list[OrderParameter]) -> None:
+        """A method to add order parameters.
+
+        Args:
+            order_parameters (list[OrderParameter]): The list of order parameters to add.
+        """
         self.order_parameters.add_parameters(order_parameters)
 
 class ResultSet:
+    """A class that represents a single set of results from searching, filtering, ordering, or a combination of the three.
+    """
     def __init__(self, users: list[InvgateUser], assets: list[InvgateAsset], query: QueryParameters = QueryParameters()):
+        """Creates a new ResultSet object.
+
+        Args:
+            users (list[InvgateUser]): The list of users in the result set.
+            assets (list[InvgateAsset]): The list of assets in the result set.
+            query (QueryParameters, optional): The list of parameters that has led to the results contained within the result set.. Defaults to QueryParameters().
+        """
         self.users: list[InvgateUser] = users
         self.assets: list[InvgateAsset] = assets
         self.query: QueryParameters = query
 
-    def filter(self, parameters: FilterParameters) -> ResultSet:   
+    def filter(self, parameters: FilterParameters) -> ResultSet:  
+        """Filters the list of records based on the parameters given.
+        
+        Args:
+            parameters (FilterParameters): The parameters to filter by.
+            
+        Returns:
+            ResultSet: The filtered list of data.
+        """       
         new_query: QueryParameters = copy.deepcopy(self.query)
         new_query.add_filter_parameters(parameters.get_all_parameters())     
         results: ResultSet = ResultSet(users = [], assets = [], query = new_query)
@@ -437,6 +577,14 @@ class ResultSet:
         return results
 
     def search(self, parameters: SearchParameters) -> ResultSet:
+        """Searches the list of records based on the parameters given.
+
+        Args:
+            parameters (SearchParameters): The parameters to search by.
+
+        Returns:
+            ResultSet: The searched list of data.
+        """
         new_query: QueryParameters = copy.deepcopy(self.query)
         new_query.add_search_parameters(parameters.get_all_parameters())
         results: ResultSet = ResultSet(users = [], assets = [], query = new_query)
@@ -452,19 +600,42 @@ class ResultSet:
         return results
 
     def order(self, parameters: OrderParameters) -> ResultSet:
+        """Orders the list of records based on the parameters given.
+
+        Args:
+            parameters (OrderParameters): The parameters to order by.
+
+        Returns:
+            ResultSet: The filtered list of data.
+        """
         new_query: QueryParameters = copy.deepcopy(self.query)
         new_query.add_order_parameters(parameters.get_all_parameters())
         sorted_data: dict = parameters.sort_collections(self.assets.copy(), self.users.copy())
         return ResultSet(users = sorted_data.get("users"), assets = sorted_data.get("assets"), query = new_query)
         
 class Data:
+    """A class for storing all, unqueried data.
+    """
     def __init__(self, connection: InvgateConnection):
+        """Creates a new Data object.
+
+        Args:
+            connection (InvgateConnection): The connection to be passed for the data to be read from.
+        """
         response = connection.load_data()
 
         self.assets: list[InvgateAsset] = response.get("assets")
         self.users: list[InvgateUser] = response.get("users")
 
     def query_data(self, query_parameters: QueryParameters) -> ResultSet:
+        """A method that takes a QueryParameters object and performs all relevant querying on the data.
+
+        Args:
+            query_parameters (QueryParameters): The query parameters.
+
+        Returns:
+            ResultSet: The set of queried data.
+        """
         results: ResultSet = ResultSet(self.users, self.assets)      
         if query_parameters.filter_parameters:
             results = results.filter(query_parameters.filter_parameters)
@@ -478,13 +649,37 @@ class Data:
         return results
 
     def filter_data(self, filter_parameters: FilterParameters) -> ResultSet:
+        """A method for filtering data.
+
+        Args:
+            filter_parameters (FilterParameters): The filter parameters.
+
+        Returns:
+            ResultSet: The set of filtered data.
+        """
         results: ResultSet = ResultSet(self.users, self.assets)
         return results.filter(filter_parameters)
 
     def search_data(self, search_parameters: SearchParameters) -> ResultSet:
+        """A method for searching data.
+
+        Args:
+            search_parameters (SearchParameters): The search parameters.
+
+        Returns:
+            ResultSet: The set of searched data.
+        """
         results: ResultSet = ResultSet(self.users, self.assets)
         return results.search(search_parameters)
 
     def order_data(self, order_parameters: OrderParameters) -> ResultSet:
+        """A method for ordering data.
+
+        Args:
+            order_parameters (OrderParameters): The order parameters.
+
+        Returns:
+            ResultSet: The set of ordered data.
+        """
         results: ResultSet = ResultSet(self.users, self.assets)
         return results.order(order_parameters)
