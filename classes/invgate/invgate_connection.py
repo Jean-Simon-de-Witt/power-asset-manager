@@ -13,6 +13,7 @@ from classes.invgate.invgate_location import InvgateLocation
 from classes.invgate.invgate_software import InvgateSoftware, InvgateVersion, InvgateProgram
 from classes.invgate.invgate_update import InvgateUpdate, InvgateOperatingSystemUpdateVersion, InvgateOperatingSystemUpdate
 from classes.invgate.invgate_asset import InvgateAsset
+from classes.invgate.invgate_computer import *
 
 class InvgateConnection:
     """A class to connect and make requests to the Invgate API.
@@ -69,7 +70,7 @@ class InvgateConnection:
     # ==============================================================================================
     # Request Methods: General functions that interact directly to the API by sending requests.
     # ==============================================================================================
-    def get_data(self, endpoint_path: str = None, page: str = None, v1: bool = False, query: str = None, full_path: str = None) -> dict:
+    def get_data(self, endpoint_path: str = None, page: str = None, v1: bool = False, query: str = None, full_path: str = None, include: list[str] = None) -> dict:
         """Executes GET requests to the API and retrieves data in the form of a dictionary.
 
         Args:
@@ -94,13 +95,30 @@ class InvgateConnection:
         if full_path:
             full_url = full_path
         else:
+            if include:
+                include_str = "include="
+                for i in range(0, len(include)):
+                    include_str += include[i]
+                    if i < len(include) - 1:
+                        include_str += ","
+            else:
+                include_str = None
+                
             full_url = f"{self.domain}{endpoint_path}"
-            if page and query:
+            if page and query and include:
+                full_url = full_url + f"?page={page}&{query}&{include_str}"
+            elif page and query:
                 full_url = full_url + f"?page={page}&{query}"
+            elif page and include:
+                full_url = full_url + f"?page={page}&{include_str}"
+            elif query and include:
+                full_url = full_url + f"?{query}&{include_str}"
             elif page:
                 full_url = full_url + f"?page={page}"
             elif query:
                 full_url = full_url + f"?{query}"
+            elif include:
+                full_url = full_url + f"?{include_str}"
 
         try:
             if v1:
@@ -502,7 +520,7 @@ class InvgateConnection:
         return None
 
     def get_update(self, id: int) -> InvgateUpdate:
-        """Gets an updated from Invgate and returns it as an InvgateUpdate object.
+        """Gets an update from Invgate and returns it as an InvgateUpdate object.
 
         Args:
             id (int): Used to get the update by ID.
@@ -517,7 +535,22 @@ class InvgateConnection:
             return InvgateUpdate(response.get("id") if response.get("id") else 0, response.get("install_date") or "", response.get("status") or "", response.get("computer") if response.get("computer") else 0, os_update_version)
         print("Get Update Failed: Update not found or invalid response received.")
         return None
+    
+    def get_computer(self, asset: InvgateAsset):
+        """Gets a computer from Invgate and returns it as an InvgateComputer object.
 
+        Args:
+            asset (InvgateAsset): The asset to which the computer is linked.
+        """
+        response = self.get_data(endpoint_path = routes.computer(asset.id), v1 = True, include = ["reported_motherboard.specs", "reported_bios", "reported_monitors.specs.manufacturer", "reported_printers.specs.manufacturer", "reported_storages.specs.manufacturer", "reported_rams.specs.manufacturer", "reported_cpus.specs.manufacturer", "geolocation", "osinfo_set.os.manufacturer", "osinfo_set.network_adapters.nic", "osinfo_set.gateway", "osinfo_set.dns", "osinfo_set.domains", "osinfo_set.osstatus"])
+        included = response.get("included")
+        data = response.get("data")
+        return self.flatten_data(included, data)
+                        
+                    
+                    
+        print("Get Computer failed: Computer not found or invalid response received.")
+        return None
     def get_updates_for_computer(self, computer_id: int) -> dict:
         """Gets all updates belonging to an asset and returns them as InvgateUpdate objects.
 
@@ -884,3 +917,89 @@ class InvgateConnection:
         if count_parameters != 1:
             return False
         return True
+    
+    def map_included_data(self, included_data: list[dict]) -> dict[str, dict[str, any]]:
+        """A helper function used to map included data based on their type and their ID.
+
+        Args:
+            included_data (list[dict]): The set of included data to map.
+
+        Returns:
+            dict[str, dict[str, any]]: The mapped set of relations.
+        """
+        mapped_data: dict[str, dict[str, any]] = {}
+        
+        for data in included_data:
+            r_type = data.get("type") if data.get("type") else None
+            
+            if r_type and data.get("id"):
+                if not mapped_data.get(r_type):
+                    mapped_data[r_type] = {}
+                mapped_data[r_type][data.get("id")] = data
+            else:
+                continue
+            
+        return mapped_data
+    
+    def get_related_data(self, data: dict[str, dict[str, any]], object: dict[str, any], mapped: bool = False) -> dict[str, dict[str, any]]:
+        if data:
+            if not mapped:
+                mapped_data = self.map_included_data(data)
+            else:
+                mapped_data = data
+        else:
+            return None
+        relationships = object.get("relationships")
+        related_data: dict[str, dict[str, any]] = {}
+        if relationships:
+            for key, relationship in relationships.items():
+                if relationship.get("meta"):
+                    contained_values = relationship.get("data")
+                    if contained_values:
+                        related_data[key] = []
+                        for contained_value in contained_values:
+                            matched_data = mapped_data.get(contained_value.get("type")).get(contained_value.get("id")) if mapped_data.get(contained_value.get("type")) and mapped_data.get(contained_value.get("type")).get(contained_value.get("id")) else None
+                            if matched_data:
+                                related_data.get(key).append(matched_data)
+                            else:
+                                continue
+                    else:
+                        continue
+                else:
+                    matched_data = mapped_data.get(relationship.get("type")).get(relationship.get("id")) if mapped_data.get(relationship.get("type")) and mapped_data.get(relationship.get("type")).get(relationship.get("id")) else None
+                    if matched_data:
+                        related_data[key] = matched_data
+                    else:
+                        continue
+            return related_data
+        return None
+    def flatten_data(self, included_data: dict[str, dict[str, any]], obj: dict[str, any], mapped: bool = False) -> dict[str, any]:
+        if included_data:
+            if not mapped:
+                mapped_data = self.map_included_data(included_data)
+            else:
+                mapped_data = included_data
+        else:
+            return None
+        
+        flattened_data = {}
+        attributes = obj.get("attributes")
+        
+        if attributes and obj.get("id") and obj.get("type"):
+            flattened_data["id"] = obj.get("id")
+            flattened_data["type"] = obj.get("type")
+        for key, value in attributes.items():
+            if key == "relationships":
+                continue
+            flattened_data[key] = value
+        relationships = self.get_related_data(mapped_data, obj, mapped = True)
+        if relationships:
+            for r_key, relationship in relationships.items():
+                if type(relationship) == list:
+                    flattened_data[r_key] = []
+                    for contained_item in relationship:
+                        flattened_data[r_key].append(self.flatten_data(mapped_data, contained_item, mapped = True))
+                else:
+                    flattened_data[r_key] = self.flatten_data(mapped_data, relationship, mapped = True)
+                
+        return flattened_data

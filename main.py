@@ -31,9 +31,8 @@ def main():
 
     app = QApplication(sys.argv) 
 
-    computer = invgate.get_data(endpoint_path = routes.computer(934), v1 = True, query = "include=reported_bios,reported_monitors.specs.manufacturer,reported_printers.specs.manufacturer,reported_storages.specs.manufacturer,reported_rams.specs.manufacturer,reported_cpus.specs.manufacturer,geolocation,osinfo_set.os,osinfo_set.network_adapters,osinfo_set.gateway,osinfo_set.dns,osinfo_set.domains,osinfo_set.osstatus").get("included")
-    for dictionary in computer:
-        print(f"{dictionary}\n")
+    asset = invgate.get_asset(id = 934)
+    print(invgate.get_computer(asset))
 
 if __name__ == "__main__":
     main()     
