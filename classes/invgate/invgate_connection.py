@@ -1,5 +1,6 @@
 import json
 import requests
+from typing import Any
 from classes.invgate.invgate_routes import InvgateRoutes as routes
 from classes.invgate.invgate_user import InvgateUser
 from classes.invgate.invgate_finance import InvgateFinance
@@ -506,8 +507,18 @@ class InvgateConnection:
 
         response = self.get_data(endpoint_path = routes.assets(), query = query)
         
-        if response and response.get("results") and len(response.get("results")) == 1:
-            asset = response.get("results")[0]
+        if response and response.get("results") and len(response.get("results")) >= 1:
+            if len(response.get("results")) > 1:
+                active_result = False
+                asset = None
+                for result in response.get("results"):
+                    if result.get("status") == 2:
+                        active_result = True
+                        asset = result
+                if not active_result:
+                    asset = response.get("results")[0]
+            else:
+                asset = response.get("results")[0]
             
             manufacturer: InvgateManufacturer = self.get_manufacturer(name = asset.get("manufacturer")) if asset.get("manufacturer") else None
             finance: InvgateFinance = self.get_finance(id = asset.get("finance")) if asset.get("finance") else None
@@ -536,7 +547,7 @@ class InvgateConnection:
         print("Get Update Failed: Update not found or invalid response received.")
         return None
     
-    def get_computer(self, asset: InvgateAsset):
+    def get_computer(self, asset: InvgateAsset) -> InvgateComputer:
         """Gets a computer from Invgate and returns it as an InvgateComputer object.
 
         Args:
@@ -544,13 +555,201 @@ class InvgateConnection:
         """
         response = self.get_data(endpoint_path = routes.computer(asset.id), v1 = True, include = ["reported_motherboard.specs", "reported_bios", "reported_monitors.specs.manufacturer", "reported_printers.specs.manufacturer", "reported_storages.specs.manufacturer", "reported_rams.specs.manufacturer", "reported_cpus.specs.manufacturer", "geolocation", "osinfo_set.os.manufacturer", "osinfo_set.network_adapters.nic", "osinfo_set.gateway", "osinfo_set.dns", "osinfo_set.domains", "osinfo_set.osstatus"])
         included = response.get("included")
-        data = response.get("data")
-        return self.flatten_data(included, data)
+        mapped_data = self.map_included_data(included)
+        computer = self.flatten_data(mapped_data, response.get("data"))
+        
+        # OS Info
+        osinfos: list[dict[str, Any]] = computer.get("osinfo_set") if computer.get("osinfo_set") else None
+        if osinfos:
+            osinfo_set: list[ReportedOSInfo] = []
+            for osinfo_d in osinfos:
+                os_d = osinfo_d.get("os") if osinfo_d.get("os") else None
+                if os_d:
+                    manufacturer_d = os_d.get("manufacturer") if os_d.get("manufacturer") else None
+                    if manufacturer_d:
+                        manufacturer: ReportedManufacturer = ReportedManufacturer(manufacturer_d.get("id") or "", manufacturer_d.get("name") or "", manufacturer_d.get("is_manual") if manufacturer_d.get("is_manual") else False, manufacturer_d.get("is_component") if manufacturer_d.get("is_component") else False, manufacturer_d.get("logo") or "", manufacturer_d.get("support_url") or "", manufacturer_d.get("website_url") or "")
+                    else:
+                        manufacturer: ReportedManufacturer = None
+                    os: ReportedOS = ReportedOS(os_d.get("id") or "", os_d.get("name") or "", os_d.get("version") or "", os_d.get("arch") or "", os_d.get("full_name") or "", os_d.get("supports_software_deployment") if os_d.get("supports_software_deployment") else False, manufacturer)
+                else:
+                    os: ReportedOS = None
+                network_adapters_d = osinfo_d.get("network_adapters") if osinfo_d.get("network_adapters") else None
+                if network_adapters_d:
+                    network_adapters: list[ReportedNetworkAdapter] = []
+                    for network_adapter_d in network_adapters_d:
+                        model_d = network_adapter_d.get("nic") if network_adapter_d.get("nic") else None
+                        if model_d:
+                            manufacturer_d = model_d.get("manufacturer") if model_d.get("manufacturer") else None
+                            if manufacturer_d:
+                                manufacturer: ReportedManufacturer = ReportedManufacturer(manufacturer_d.get("id") or "", manufacturer_d.get("name") or "", manufacturer_d.get("is_manual") if manufacturer_d.get("is_manual") else False, manufacturer_d.get("is_component") if manufacturer_d.get("is_component") else False, manufacturer_d.get("logo") or "", manufacturer_d.get("support_url") or "", manufacturer_d.get("website_url") or "")
+                            else:
+                                manufacturer: ReportedManufacturer = None
+                            model: ReportedNetworkAdapterModel = ReportedNetworkAdapterModel(model_d.get("id") or "", model_d.get("model_name") or "", model_d.get("model") or "", model_d.get("name") or "", model_d.get("description") or "", model_d.get("status") or "", model_d.get("icon") or "", model_d.get("kind") or "", model_d.get("sku") or "", model_d.get("is_manual") if model_d.get("is_manual") else False, model_d.get("import_uuid") or "", model_d.get("updated_at") or "", model_d.get("device_type") or "", manufacturer)
+                        else:
+                            model: ReportedNetworkAdapterModel = None
+                        network_adapters.append(ReportedNetworkAdapter(network_adapter_d.get("id") or "", network_adapter_d.get("device_id") or "", network_adapter_d.get("is_virtual") if network_adapter_d.get("is_virtual") else False, network_adapter_d.get("mac"), network_adapter_d.get("speed") or "", network_adapter_d.get("ip_address") or "", network_adapter_d.get("ipv6_address") or "", network_adapter_d.get("ip_netmask"), network_adapter_d.get("ip_prefix"), network_adapter_d.get("default") if network_adapter_d.get("default") else False, model))
                         
-                    
-                    
-        print("Get Computer failed: Computer not found or invalid response received.")
-        return None
+                else:
+                    network_adapters: list[ReportedNetworkAdapter] = []
+                gateways_d = osinfo_d.get("gateway") if osinfo_d.get("gateway") else None
+                if gateways_d:
+                    gateways: list[ReportedGateway] = []
+                    for gateway_d in gateways_d:
+                        gateways.append(ReportedGateway(gateway_d.get("id") or "", gateway_d.get("address")))                    
+                else:
+                    gateways: list[ReportedGateway] = []
+                dnss_d = osinfo_d.get("dns") if osinfo_d.get("dns") else None
+                if dnss_d:
+                    dnss: list[ReportedDNS] = []
+                    for dns_d in dnss_d:
+                        dnss.append(ReportedDNS(dns_d.get("id") or "", dns_d.get("address") or ""))
+                else:
+                    dnss: list[ReportedDNS] = []
+                domains_d = osinfo_d.get("domains") if osinfo_d.get("domains") else None
+                if domains_d:
+                    domains: list[ReportedDomain] = []
+                    for domain_d in domains_d:
+                        domains.append(ReportedDomain(domain_d.get("id") or "", domain_d.get("name") or ""))
+                else:
+                    domains: list[ReportedDomain] = []
+                os_status_d = osinfo_d.get("osstatus") if osinfo_d.get("osstatus") else None
+                if os_status_d:
+                    logged_users_d = os_status_d.get("logged_users") if os_status_d.get("logged_users") else None
+                    if logged_users_d:
+                        logged_users: list[ReportedUser] = []
+                        for user_d in logged_users_d:
+                            logged_users.append(ReportedUser(user_d.get("name") or "", user_d.get("raw_username") or "", user_d.get("current") if user_d.get("current") else False, user_d.get("last_login_time") or ""))
+                    else:
+                        logged_users: list[ReportedUser] = []                            
+                    os_status: ReportedOSStatus = ReportedOSStatus(os_status_d.get("id") or "", os_status_d.get("uptime") if os_status_d.get("uptime") else 0, os_status_d.get("boot_time") or "", os_status_d.get("firewall") or "", os_status_d.get("usb") or "", os_status_d.get("default_ip") or "", os_status_d.get("antivirus") or "", os_status_d.get("antivirus_name") or "", os_status_d.get("memory_size") if os_status_d.get("memory_size") else 0, os_status_d.get("memory_available") if os_status_d.get("memory_available") else 0, os_status_d.get("rdp_enabled") if os_status_d.get("rdp_enabled") else False, os_status_d.get("vnc_enabled") if os_status_d.get("vnc_enabled") else False, os_status_d.get("teamviewer_id") if os_status_d.get("teamviewer_id") else 0, os_status_d.get("anydesk_id") if os_status_d.get("anydesk_id") else 0, logged_users) 
+                else:
+                    os_status: ReportedOSStatus = None
+                osinfo_set.append(ReportedOSInfo(osinfo_d.get("id") or "", osinfo_d.get("serial") or "", osinfo_d.get("product_key") or "", osinfo_d.get("hostname") or "", osinfo_d.get("azure_ad_tenant_name") or "", os, network_adapters, gateways, dnss, domains, os_status))
+        else:
+            osinfo_set: list[ReportedOSInfo] = None
+            
+        # Geolocation
+        geolocation_d: dict[str, Any] = computer.get("geolocation") if computer.get("geolocation") else None
+        if geolocation_d:
+            geolocation: ReportedGeolocation = ReportedGeolocation(geolocation_d.get("id") or "", geolocation_d.get("latitude") if geolocation_d.get("latitude") else 0, geolocation_d.get("longitude") if geolocation_d.get("longitude") else 0)
+        else:
+            geolocation: ReportedGeolocation = None
+
+        # Motherboard
+        motherboard_d: dict[str, Any] = computer.get("reported_motherboard") if computer.get("reported_motherboard") else None
+        if motherboard_d:
+            model_d = motherboard_d.get("specs") if motherboard_d.get("specs") else None
+            if model_d:
+                model: ReportedMotherboardModel = ReportedMotherboardModel(model_d.get("id") or "", model_d.get("model") or "")
+            else:
+                model: ReportedMotherboardModel = None
+            reported_motherboard: ReportedMotherboard = ReportedMotherboard(motherboard_d.get("id") or "", motherboard_d.get("serial") or "", model)
+        else:
+            reported_motherboard: ReportedMotherboard = None
+            
+        # CPU
+        cpus_d: list[dict[str, Any]] = computer.get("reported_cpus") if computer.get("reported_cpus") else None
+        if cpus_d:
+            reported_cpus: list[ReportedCPU] = []
+            for cpu_d in cpus_d:
+                model_d = cpu_d.get("specs") if cpu_d.get("specs") else None
+                if model_d:
+                    manufacturer_d = model_d.get("manufacturer") if model_d.get("manufacturer") else None
+                    if manufacturer_d:
+                        manufacturer: ReportedManufacturer = ReportedManufacturer(manufacturer_d.get("id") or "", manufacturer_d.get("name") or "", manufacturer_d.get("is_manual") if manufacturer_d.get("is_manual") else False, manufacturer_d.get("is_component") if manufacturer_d.get("is_component") else False, manufacturer_d.get("logo") or "", manufacturer_d.get("support_url") or "", manufacturer_d.get("website_url") or "")
+                    else:
+                        manufacturer: ReportedManufacturer = None
+                    model: ReportedCPUModel = ReportedCPUModel(model_d.get("id") or "", model_d.get("model_name") or "", model_d.get("model") or "", model_d.get("name") or "", model_d.get("description") or "", model_d.get("status") or "", model_d.get("icon") or "", model_d.get("kind") or "", model_d.get("sku") or "", model_d.get("is_manual") if model_d.get("is_manual") else False, model_d.get("import_uuid") or "", model_d.get("updated_at") or "", model_d.get("family") or "", model_d.get("frequency") or "", model_d.get("cores") if model_d.get("cores") else 0, manufacturer)
+                else:
+                    model: ReportedCPUModel = None
+                reported_cpus.append(ReportedCPU(cpu_d.get("id") or "", cpu_d.get("serial") or "", cpu_d.get("created_at") or "", cpu_d.get("deleted_at") or "", cpu_d.get("assigned_cores") if cpu_d.get("assigned_cores") else 0, model))
+        else:
+            reported_cpus: list[ReportedCPU] = []
+            
+        # RAM
+        rams_d: list[dict[str, Any]] = computer.get("reported_rams") if computer.get("reported_rams") else None
+        if rams_d:
+            reported_rams: list[ReportedRAMModule] = []
+            for ram_d in rams_d:
+                model_d = ram_d.get("specs") if ram_d.get("specs") else None
+                if model_d:
+                    manufacturer_d = model_d.get("manufacturer") if model_d.get("manufacturer") else None
+                    if manufacturer_d:
+                        manufacturer: ReportedManufacturer = ReportedManufacturer(manufacturer_d.get("id") or "", manufacturer_d.get("name") or "", manufacturer_d.get("is_manual") if manufacturer_d.get("is_manual") else False, manufacturer_d.get("is_component") if manufacturer_d.get("is_component") else False, manufacturer_d.get("logo") or "", manufacturer_d.get("support_url") or "", manufacturer_d.get("website_url"))
+                    else:
+                        manufacturer: ReportedManufacturer = None
+                    model: ReportedRAMModel = ReportedRAMModel(model_d.get("id") or "", model_d.get("model_name") or "", model_d.get("model") or "", model_d.get("name") or "", model_d.get("description") or "", model_d.get("status") or "", model_d.get("icon") or "", model_d.get("kind") or "", model_d.get("sku") or "", model_d.get("is_manual") if model_d.get("is_manual") else False, model_d.get("import_uuid") or "", model_d.get("updated_at") or "", model_d.get("capacity") if model_d.get("capacity") else 0, model_d.get("speed") if model_d.get("speed") else 0, model_d.get("device_type") or "", model_d.get("width") if model_d.get("width") else 0, manufacturer)
+                else:
+                    model: ReportedRAMModel = None
+                reported_rams.append(ReportedRAMModule(ram_d.get("id") or "", ram_d.get("bank") or "", ram_d.get("capacity") if ram_d.get("capacity") else 0, ram_d.get("speed") if ram_d.get("speed") else 0, ram_d.get("device_type") or "", ram_d.get("width") if ram_d.get("width") else 0, ram_d.get("serial") or "", ram_d.get("created_at") or "", ram_d.get("deleted_at") or "", model))
+        else:
+            reported_rams: list[ReportedRAMModule] = []
+            
+        # Storage
+        storages_d: list[dict[str, Any]] = computer.get("reported_storages") if computer.get("reported_storages") else None
+        if storages_d:
+            reported_storages: list[ReportedStorage] = []
+            for storage_d in storages_d:
+                model_d = storage_d.get("specs") if storage_d.get("specs") else None
+                if model_d:
+                    manufacturer_d = model_d.get("manufacturer") if model_d.get("manufacturer") else None
+                    if manufacturer_d:
+                        manufacturer: ReportedManufacturer = ReportedManufacturer(manufacturer_d.get("id") or "", manufacturer_d.get("name") or "", manufacturer_d.get("is_manual") if manufacturer_d.get("is_manual") else False, manufacturer_d.get("is_component") if manufacturer_d.get("is_component") else False, manufacturer_d.get("logo") or "", manufacturer_d.get("support_url") or "", manufacturer_d.get("website_url") or "")
+                    else:
+                        manufacturer: ReportedManufacturer = None
+                    model: ReportedStorageModel = ReportedStorageModel(model_d.get("id") or "", model_d.get("model_name") or "", model_d.get("model") or "", model_d.get("name") or "", model_d.get("description") or "", model_d.get("status") or "", model_d.get("icon") or "", model_d.get("kind") or "", model_d.get("sku") or "", model_d.get("is_manual") if model_d.get("is_manual") else False, model_d.get("import_uuid") or "", model_d.get("updated_at") or "", model_d.get("device_type") or "", model_d.get("disk_type") or "", manufacturer)    
+                else:
+                    model: ReportedStorageModel = None
+            reported_storages.append(ReportedStorage(storage_d.get("id") or "", storage_d.get("created_at") or "", storage_d.get("deleted_at"), storage_d.get("capacity") if storage_d.get("capacity") else 0, storage_d.get("label") or "", storage_d.get("available") if storage_d.get("available") else 0, model))
+        else:
+            reported_storages: list[ReportedStorage] = []
+        # Printer
+        printers_d: list[dict[str, Any]] = computer.get("reported_printers") if computer.get("reported_printers") else None
+        if printers_d:
+            reported_printers: list[ReportedPrinter] = []
+            for printer_d in printers_d:
+                model_d = printer_d.get("specs") if printer_d.get("specs") else None
+                if model_d:
+                    manufacturer_d = model_d.get("manufacturer") if model_d.get("manufacturer") else None
+                    if manufacturer_d:
+                        manufacturer: ReportedManufacturer = ReportedManufacturer(manufacturer_d.get("id") or "", manufacturer_d.get("name") or "", manufacturer_d.get("is_manual") if manufacturer_d.get("is_manual") else False, manufacturer_d.get("is_component") if manufacturer_d.get("is_component") else False, manufacturer_d.get("logo") or "", manufacturer_d.get("support_url") or "", manufacturer_d.get("website_url") or "")
+                    else:
+                        manufacturer: ReportedManufacturer = None
+                    model: ReportedPrinterModel = ReportedPrinterModel(model_d.get("id") or "", model_d.get("model_name") or "", model_d.get("model") or "", model_d.get("name") or "", model_d.get("description") or "", model_d.get("status") or "", model_d.get("icon") or "", model_d.get("kind") or "", model_d.get("sku") or "", model_d.get("is_manual") if model_d.get("is_manual") else False, model_d.get("import_uuid") or "", model_d.get("updated_at") or "", manufacturer)
+                else:
+                    model: ReportedPrinterModel = None
+                reported_printers.append(ReportedPrinter(printer_d.get("id") or "", printer_d.get("created_at") or "", printer_d.get("deleted_at") or "", model))
+        else:
+            reported_printers: list[ReportedPrinter] = []
+        
+        # Monitor
+        monitors_d: list[dict[str, Any]] = computer.get("reported_monitors") if computer.get("reported_monitors") else None
+        if monitors_d:
+            reported_monitors: list[ReportedMonitor] = []
+            for monitor_d in monitors_d:
+                model_d = monitor_d.get("specs") if monitor_d.get("specs") else None
+                if model_d:
+                    manufacturer_d = model_d.get("manufacturer") if model_d.get("manufacturer") else None
+                    if manufacturer_d:
+                        manufacturer: ReportedManufacturer = ReportedManufacturer(manufacturer_d.get("id") or "", manufacturer_d.get("name") or "", manufacturer_d.get("is_manual") if manufacturer_d.get("is_manual") else False, manufacturer_d.get("is_component") if manufacturer_d.get("is_component") else False, manufacturer_d.get("logo") or "", manufacturer_d.get("support_url") or "", manufacturer_d.get("website_url") or "")
+                    else:
+                        manufacturer: ReportedManufacturer = None
+                    model: ReportedMonitorModel = ReportedMonitorModel(model_d.get("id") or "", model_d.get("model_name") or "", model_d.get("model") or "", model_d.get("height_measurement_unit") or "", model_d.get("width_measurement_unit") or "", model_d.get("diagonal_measurement_unit") or "", model_d.get("name") or "", model_d.get("description") or "", model_d.get("status") or "", model_d.get("icon") or "", model_d.get("kind") or "", model_d.get("sku") or "", model_d.get("is_manual") if model_d.get("is_manual") else False, model_d.get("import_uuid") or "", model_d.get("updated_at") or "", model_d.get("height") if model_d.get("height") else 0, model_d.get("width") if model_d.get("width") else 0, model_d.get("ratio") if model_d.get("ratio") else 0, model_d.get("diagonal") if model_d.get("diagonal") else 0, model_d.get("resolution") or "", manufacturer)
+                else:
+                    model: ReportedMonitorModel = None
+                reported_monitors.append(ReportedMonitor(monitor_d.get("id") or "", monitor_d.get("created_at") or "", monitor_d.get("deleted_at") or "", monitor_d.get("edid") or "", monitor_d.get("serial") or "", model))
+        else:
+            reported_monitors: list[ReportedMonitor] = []
+        
+        # BIOS
+        bios_d: dict[str, Any] = computer.get("reported_bios") if computer.get("reported_bios") else None
+        if bios_d:
+            reported_bios: ReportedBIOS = ReportedBIOS(bios_d.get("id") or "", bios_d.get("date") or "", bios_d.get("version") or "")
+        else:
+            reported_bios: ReportedBIOS = None
+            
+        return InvgateComputer(computer.get("id") or "", asset, computer.get("total_ram") if computer.get("total_ram") else 0, computer.get("format_type") or "", computer.get("name") or "", computer.get("inventory_id") or "", computer.get("serial") or "", computer.get("virtual") or "", computer.get("firewall_status") or "",computer.get("antivirus_status") or "", computer.get("connectivity_status") or "", computer.get("last_logged_user") or "", osinfo_set, geolocation, reported_motherboard, reported_cpus, reported_rams, reported_storages, reported_printers, reported_monitors, reported_bios)
+        
     def get_updates_for_computer(self, computer_id: int) -> dict:
         """Gets all updates belonging to an asset and returns them as InvgateUpdate objects.
 
@@ -917,89 +1116,46 @@ class InvgateConnection:
         if count_parameters != 1:
             return False
         return True
-    
-    def map_included_data(self, included_data: list[dict]) -> dict[str, dict[str, any]]:
-        """A helper function used to map included data based on their type and their ID.
 
-        Args:
-            included_data (list[dict]): The set of included data to map.
-
-        Returns:
-            dict[str, dict[str, any]]: The mapped set of relations.
-        """
-        mapped_data: dict[str, dict[str, any]] = {}
-        
+    def map_included_data(self, included_data: list[dict]) -> dict[str, dict[str, Any]]:
+        if not included_data: 
+            return None
+        mapped_data: dict[str, dict[str, Any]] = {}
         for data in included_data:
-            r_type = data.get("type") if data.get("type") else None
-            
-            if r_type and data.get("id"):
-                if not mapped_data.get(r_type):
-                    mapped_data[r_type] = {}
-                mapped_data[r_type][data.get("id")] = data
+            if data.get("type") and data.get("id"):
+                if not mapped_data.get(data.get("type")):
+                    mapped_data[data.get("type")] = {}
+                mapped_data[data.get("type")][data.get("id")] = data
             else:
                 continue
-            
         return mapped_data
     
-    def get_related_data(self, data: dict[str, dict[str, any]], object: dict[str, any], mapped: bool = False) -> dict[str, dict[str, any]]:
-        if data:
-            if not mapped:
-                mapped_data = self.map_included_data(data)
-            else:
-                mapped_data = data
-        else:
-            return None
-        relationships = object.get("relationships")
-        related_data: dict[str, dict[str, any]] = {}
-        if relationships:
-            for key, relationship in relationships.items():
-                if relationship.get("meta"):
-                    contained_values = relationship.get("data")
-                    if contained_values:
-                        related_data[key] = []
-                        for contained_value in contained_values:
-                            matched_data = mapped_data.get(contained_value.get("type")).get(contained_value.get("id")) if mapped_data.get(contained_value.get("type")) and mapped_data.get(contained_value.get("type")).get(contained_value.get("id")) else None
-                            if matched_data:
-                                related_data.get(key).append(matched_data)
-                            else:
-                                continue
-                    else:
-                        continue
-                else:
-                    matched_data = mapped_data.get(relationship.get("type")).get(relationship.get("id")) if mapped_data.get(relationship.get("type")) and mapped_data.get(relationship.get("type")).get(relationship.get("id")) else None
-                    if matched_data:
-                        related_data[key] = matched_data
-                    else:
-                        continue
-            return related_data
-        return None
-    def flatten_data(self, included_data: dict[str, dict[str, any]], obj: dict[str, any], mapped: bool = False) -> dict[str, any]:
-        if included_data:
-            if not mapped:
-                mapped_data = self.map_included_data(included_data)
-            else:
-                mapped_data = included_data
-        else:
-            return None
-        
-        flattened_data = {}
-        attributes = obj.get("attributes")
-        
-        if attributes and obj.get("id") and obj.get("type"):
-            flattened_data["id"] = obj.get("id")
+    def flatten_data(self, mapped_data: dict[str, dict[str, Any]], obj: dict[str, Any], parents: list = None):
+        parents = parents or []
+        if mapped_data and obj:
+            if obj.get("type") and obj.get("id") and {obj.get("type"): obj.get("id")} in parents:
+                return None
+            flattened_data: dict[str, Any] = {}
             flattened_data["type"] = obj.get("type")
-        for key, value in attributes.items():
-            if key == "relationships":
-                continue
-            flattened_data[key] = value
-        relationships = self.get_related_data(mapped_data, obj, mapped = True)
-        if relationships:
-            for r_key, relationship in relationships.items():
-                if type(relationship) == list:
-                    flattened_data[r_key] = []
-                    for contained_item in relationship:
-                        flattened_data[r_key].append(self.flatten_data(mapped_data, contained_item, mapped = True))
-                else:
-                    flattened_data[r_key] = self.flatten_data(mapped_data, relationship, mapped = True)
-                
-        return flattened_data
+            flattened_data["id"] = obj.get("id")
+            if obj.get("attributes"):
+                for key, value in obj.get("attributes").items():
+                    flattened_data[key] = value
+            if obj.get("relationships"):
+                for key, value in obj.get("relationships").items():
+                    if isinstance(value.get("data"), list):
+                        flattened_data[key] = []
+                        for item in value.get("data"):
+                            matched_data = mapped_data.get(item.get("type")).get(item.get("id")) if item.get("type") and item.get("id") and mapped_data.get(item.get("type")) and mapped_data.get(item.get("type")).get(item.get("id")) and {item.get("type"): item.get("id")} not in parents else None
+                            if matched_data:
+                                next_parents = parents + [{obj.get("type"): obj.get("id")}]
+                                flattened_data[key].append(self.flatten_data(mapped_data, matched_data, next_parents))
+                    else:
+                        matched_data = mapped_data.get(value.get("data").get("type")).get(value.get("data").get("id")) if value.get("data") and value.get("data").get("type") and value.get("data").get("id") and mapped_data.get(value.get("data").get("type")) and mapped_data.get(value.get("data").get("type")).get(value.get("data").get("id")) and {value.get("data").get("type"): value.get("data").get("id")} not in parents else None
+                        if matched_data:
+                            next_parents = parents + [{obj.get("type"): obj.get("id")}]
+                            flattened_data[key] = self.flatten_data(mapped_data, matched_data, next_parents)
+            return flattened_data
+        return None
+        
+        

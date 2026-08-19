@@ -236,7 +236,7 @@ class ReportedOS(InvgateObject):
 class ReportedOSInfo(InvgateObject):
     """A class for storing reported OS info data in memory. Inherits from the InvgateObject class.
     """
-    def __init__(self, id: str, serial: str, product_key: str, hostname: str, azure_ad_tenant_name: str, os: ReportedOS, network_adapters: list[ReportedNetworkAdapter], gateway: ReportedGateway, dns: ReportedDNS, domains: list[ReportedDomain], os_status: ReportedOSStatus):
+    def __init__(self, id: str, serial: str, product_key: str, hostname: str, azure_ad_tenant_name: str, os: ReportedOS, network_adapters: list[ReportedNetworkAdapter], gateways: list[ReportedGateway], dns: list[ReportedDNS], domains: list[ReportedDomain], os_status: ReportedOSStatus):
         """Creates a new ReportedOSInfo object.
 
         Args:
@@ -247,8 +247,8 @@ class ReportedOSInfo(InvgateObject):
             azure_ad_tenant_name (str): The Azure AD tenant name.
             os (ReportedOS): The computer's operating system.
             network_adapters (list[ReportedNetworkAdapter]): A list of the computer's network adapters.
-            gateway (ReportedGateway): The computer's gateway.
-            dns (ReportedDNS): The computer's DNS.
+            gateways (list[ReportedGateway]): The computer's gateway.
+            dns (list[ReportedDNS]): The computer's DNS.
             domains (list[ReportedDomain]): A list of the computer's domains.
             os_status (ReportedOSStatus): The computer's OS status.
         """
@@ -259,8 +259,8 @@ class ReportedOSInfo(InvgateObject):
         self.azure_ad_tenant_name: str = azure_ad_tenant_name
         self.os: ReportedOS = os
         self.network_adapters: list[ReportedNetworkAdapter] = network_adapters
-        self.gateway: ReportedGateway = gateway
-        self.dns: ReportedDNS = dns
+        self.gateways: list[ReportedGateway] = gateways
+        self.dns: list[ReportedDNS] = dns
         self.domains: list[ReportedDomain] = domains
         self.os_status: ReportedOSStatus = os_status
   
@@ -607,7 +607,7 @@ class ReportedMonitorModel(InvgateObject):
     """A class for storing reported monitor model data in memory. Inherits from the InvgateObject class.
     """
     
-    def __init__(self, id: str, model_name: str, model: str, height_measurement_unit: str, width_measurement_unit: str, diagonal_measurement_unit: str, name: str, description: str, status: str, icon: str, kind: str, sku: str, is_manual: bool, import_uuid: str, updated_at: str, height: float, width: float, ratio: str, diagonal: float, resolution: str, manufacturer: ReportedManufacturer):
+    def __init__(self, id: str, model_name: str, model: str, height_measurement_unit: str, width_measurement_unit: str, diagonal_measurement_unit: str, name: str, description: str, status: str, icon: str, kind: str, sku: str, is_manual: bool, import_uuid: str, updated_at: str, height: float, width: float, ratio: float, diagonal: float, resolution: str, manufacturer: ReportedManufacturer):
         """Creates a new ReportedMonitorModel object.
 
         Args:
@@ -628,7 +628,7 @@ class ReportedMonitorModel(InvgateObject):
             updated_at (str): When last the model was updated.
             height (float): The model's height.
             width (float): The model's width.
-            ratio (str): The model's ratio.
+            ratio (float): The model's ratio.
             diagonal (float): The model's diagonal span.
             resolution (str): The model's resolution.
             manufacturer (ReportedManufacturer): The model's manufacturer.
@@ -651,7 +651,7 @@ class ReportedMonitorModel(InvgateObject):
         self.updated_at: str = updated_at
         self.height: float = height
         self.width: float = width
-        self.ratio: str = ratio
+        self.ratio: float = ratio
         self.diagonal: float = diagonal
         self.resolution: str = resolution
         self.manufacturer: ReportedManufacturer = manufacturer
@@ -707,7 +707,7 @@ class ReportedBIOS(InvgateObject):
 class InvgateComputer(InvgateObject):
     """A class for storing data reported by the Invgate Agent. Applicable to assets of type computer only. Inherits from the InvgateObject class.
     """
-    def __init__(self, id: str, asset: InvgateAsset, total_ram: int, format_type: str, name: str, inventory_id: str, serial: str, virtual: str, firewall_status: str, antivirus_status: str, connectivity_status: str, last_logged_user: str, osinfo: ReportedOSInfo, geolocation: ReportedGeolocation, motherboard: ReportedMotherboard, cpus: list[ReportedCPU], rams: list[ReportedRAMModule], storages: list[ReportedStorage], printers: list[ReportedPrinter], monitors: list[ReportedMonitor], bios: ReportedBIOS):
+    def __init__(self, id: str, asset: InvgateAsset, total_ram: int, format_type: str, name: str, inventory_id: str, serial: str, virtual: str, firewall_status: str, antivirus_status: str, connectivity_status: str, last_logged_user: str, osinfo_set: list[ReportedOSInfo], geolocation: ReportedGeolocation, motherboard: ReportedMotherboard, cpus: list[ReportedCPU], rams: list[ReportedRAMModule], storages: list[ReportedStorage], printers: list[ReportedPrinter], monitors: list[ReportedMonitor], bios: ReportedBIOS):
         """Creates a new InvgateComputer object.
 
         Args:
@@ -723,7 +723,7 @@ class InvgateComputer(InvgateObject):
             antivirus_status (str): The computer's antivirus status.
             connectivity_status (str): The computer's connectivity status.
             last_logged_user (str): The computer's last logged user.
-            osinfo (ReportedOSInfo): A set of info relating to the computer's OS.
+            osinfo_set (list[ReportedOSInfo]): A set of info relating to the computer's OS.
             geolocation (ReportedGeolocation): The computer's geolocation.
             motherboard (ReportedMotherboard): The computer's motherboard.
             cpus (list[ReportedCPU]): A list of the computer's CPUs
@@ -746,7 +746,7 @@ class InvgateComputer(InvgateObject):
         self.antivirus_status: str = antivirus_status
         self.connectivity_status: str = connectivity_status
         self.last_logged_user: str = last_logged_user
-        self.osinfo: ReportedOSInfo = osinfo
+        self.osinfo_set: list[ReportedOSInfo] = osinfo_set
         self.geolocation: ReportedGeolocation = geolocation
         self.motherboard: ReportedMotherboard = motherboard
         self.cpus: list[ReportedCPU] = cpus

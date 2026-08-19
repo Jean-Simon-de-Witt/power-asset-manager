@@ -19,7 +19,7 @@ class InvgateObject:
             if type(value) in [str, int, float, bool]:
                 string += f"{'\t' * indent}{name.replace('_', ' ').title()}: {value}\n"
             elif type(value) == list:
-                string += f"{'\t' * indent}{name.replace('_', ' ').title()} Count: {len(value)}"
+                string += f"{'\t' * indent}{name.replace('_', ' ').title()} Count: {len(value)}\n"
             else:
                 string += f"{'\t' * indent}{name.replace('_', ' ').title()}:\n"
                 string += value.to_string(indent = indent + 1)
