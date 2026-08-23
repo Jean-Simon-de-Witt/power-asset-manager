@@ -554,9 +554,16 @@ class InvgateConnection:
             asset (InvgateAsset): The asset to which the computer is linked.
         """
         response = self.get_data(endpoint_path = routes.computer(asset.id), v1 = True, include = ["reported_motherboard.specs", "reported_bios", "reported_monitors.specs.manufacturer", "reported_printers.specs.manufacturer", "reported_storages.specs.manufacturer", "reported_rams.specs.manufacturer", "reported_cpus.specs.manufacturer", "geolocation", "osinfo_set.os.manufacturer", "osinfo_set.network_adapters.nic", "osinfo_set.gateway", "osinfo_set.dns", "osinfo_set.domains", "osinfo_set.osstatus"])
+        
+        if not response or not response.get("data"):
+            return None
+        
         included = response.get("included")
         mapped_data = self.map_included_data(included)
         computer = self.flatten_data(mapped_data, response.get("data"))
+        
+        if not computer:
+            return None
         
         # OS Info
         osinfos: list[dict[str, Any]] = computer.get("osinfo_set") if computer.get("osinfo_set") else None
@@ -700,7 +707,7 @@ class InvgateConnection:
                     model: ReportedStorageModel = ReportedStorageModel(model_d.get("id") or "", model_d.get("model_name") or "", model_d.get("model") or "", model_d.get("name") or "", model_d.get("description") or "", model_d.get("status") or "", model_d.get("icon") or "", model_d.get("kind") or "", model_d.get("sku") or "", model_d.get("is_manual") if model_d.get("is_manual") else False, model_d.get("import_uuid") or "", model_d.get("updated_at") or "", model_d.get("device_type") or "", model_d.get("disk_type") or "", manufacturer)    
                 else:
                     model: ReportedStorageModel = None
-            reported_storages.append(ReportedStorage(storage_d.get("id") or "", storage_d.get("created_at") or "", storage_d.get("deleted_at"), storage_d.get("capacity") if storage_d.get("capacity") else 0, storage_d.get("label") or "", storage_d.get("available") if storage_d.get("available") else 0, model))
+                reported_storages.append(ReportedStorage(storage_d.get("id") or "", storage_d.get("created_at") or "", storage_d.get("deleted_at"), storage_d.get("capacity") if storage_d.get("capacity") else 0, storage_d.get("label") or "", storage_d.get("available") if storage_d.get("available") else 0, model))
         else:
             reported_storages: list[ReportedStorage] = []
         # Printer
