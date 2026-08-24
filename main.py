@@ -32,6 +32,11 @@ def main():
     app = QApplication(sys.argv) 
     asset = invgate.get_asset(name = "CNB1773")
     print(invgate.get_computer(asset).to_string())
+    
+    window = MainWindow(invgate)
+    window.show()
+    
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
     main()     

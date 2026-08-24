@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QMainWindow, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QPushButton
 from PyQt6.QtCore import Qt
+from classes.ui.partials.sidebar import Sidebar
 
 class MainWindow(QMainWindow):
     def __init__(self, connection):
@@ -11,9 +12,10 @@ class MainWindow(QMainWindow):
         self.resize(400, 200)
 
         layout = QVBoxLayout()
-
+        self.sidebar = Sidebar()
         self.header_actions = QHBoxLayout()
-
+        layout.addWidget(self.sidebar)
+        
         self.file_button = QPushButton("File")
         self.edit_button = QPushButton("Edit")
 
