@@ -10,7 +10,7 @@ from classes.invgate.invgate_routes import InvgateRoutes as routes
 from classes.data.data import Data
 
 # Frontend classes
-from classes.ui.main_window import MainWindow
+from classes.ui.windows.main_window import MainWindow
 # Load Credentials
 def main():
 
@@ -33,7 +33,7 @@ def main():
     asset = invgate.get_asset(name = "CNB1773")
     print(invgate.get_computer(asset).to_string())
     
-    window = MainWindow(invgate)
+    window = MainWindow()
     window.show()
     
     sys.exit(app.exec())
